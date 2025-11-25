@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
-import { saveJSON, readJSON } from '@/lib/storage'
+import { saveJSON, readJSON, listFiles } from '@/lib/storage'
 import path from 'path'
 import fs from 'fs'
 
 const THUMBNAILS_PATH = path.join(process.cwd(), 'public', 'thumbnails')
+const USE_BLOB = process.env.USE_BLOB_STORAGE === 'true' || process.env.VERCEL_ENV === 'production'
 
 export async function POST(request, { params }) {
     try {
@@ -187,12 +188,12 @@ export async function GET(request, { params }) {
 
         if (!pagesData) {
             // אם אין קובץ, צור נתונים חדשים
-            pagesData = createPagesData(numPages, [], decodedPath)
+            pagesData = await createPagesData(numPages, [], bookName)
             await saveJSON(pagesDataFile, pagesData)
         } else if (pagesData.length !== numPages) {
             // אם מספר העמודים השתנה, עדכן
             console.log(`Updating pages count from ${pagesData.length} to ${numPages}`)
-            pagesData = createPagesData(numPages, pagesData, decodedPath)
+            pagesData = await createPagesData(numPages, pagesData, bookName)
             await saveJSON(pagesDataFile, pagesData)
         }
 
@@ -221,16 +222,31 @@ export async function GET(request, { params }) {
 }
 
 // יצירת נתוני עמודים מתיקיית התמונות
-function createPagesData(numPages, existingData = [], bookName) {
+async function createPagesData(numPages, existingData = [], bookName) {
     const pagesData = []
-    const thumbnailsPath = path.join(THUMBNAILS_PATH, bookName)
+    
+    // טען את כל התמונות של הספר
+    let thumbnails = []
+    if (USE_BLOB) {
+        const blobs = await listFiles(`thumbnails/${bookName}/`)
+        thumbnails = blobs.map(blob => ({
+            name: blob.pathname.split('/').pop(),
+            url: blob.url
+        }))
+    }
 
     for (let i = 1; i <= numPages; i++) {
         // אם יש נתונים קיימים לעמוד זה, שמור אותם
         const existingPage = existingData.find(p => p.number === i)
 
         // מצא את תמונת העמוד
-        let thumbnail = findPageThumbnail(thumbnailsPath, i, bookName)
+        let thumbnail = null
+        if (USE_BLOB) {
+            thumbnail = findPageThumbnailFromBlobs(thumbnails, i, bookName)
+        } else {
+            const thumbnailsPath = path.join(THUMBNAILS_PATH, bookName)
+            thumbnail = findPageThumbnail(thumbnailsPath, i, bookName)
+        }
 
         // הוסף את העמוד לרשימה
         if (existingPage) {
@@ -254,7 +270,27 @@ function createPagesData(numPages, existingData = [], bookName) {
     return pagesData
 }
 
-// מציאת תמונת עמוד - תומך בפורמטים שונים
+// מציאת תמונת עמוד מרשימת blobs
+function findPageThumbnailFromBlobs(thumbnails, pageNumber, bookName) {
+    const possibleNames = [
+        `page-${pageNumber}.jpg`,
+        `page-${pageNumber}.jpeg`,
+        `page-${pageNumber}.png`,
+        `page_${pageNumber}.jpg`,
+        `${pageNumber}.jpg`,
+    ]
+
+    for (const name of possibleNames) {
+        const found = thumbnails.find(t => t.name === name)
+        if (found) {
+            return found.url
+        }
+    }
+
+    return null
+}
+
+// מציאת תמונת עמוד - תומך בפורמטים שונים (מקומי)
 function findPageThumbnail(thumbnailsPath, pageNumber, bookName) {
     const possibleNames = [
         `page-${pageNumber}.jpg`,
@@ -276,22 +312,36 @@ function findPageThumbnail(thumbnailsPath, pageNumber, bookName) {
 
 // קריאת מספר עמודים מספירת תמונות
 async function getPageCountFromThumbnails(bookName) {
-    const thumbnailsPath = path.join(THUMBNAILS_PATH, bookName)
-
-    if (fs.existsSync(thumbnailsPath)) {
+    if (USE_BLOB) {
+        // ספור תמונות מ-Blob Storage
         try {
-            const files = fs.readdirSync(thumbnailsPath)
-            const imageFiles = files.filter(f => {
-                const ext = path.extname(f).toLowerCase()
-                return ['.jpg', '.jpeg', '.png', '.webp'].includes(ext)
-            })
-            console.log(`Found ${imageFiles.length} thumbnail images for ${bookName}`)
-            return imageFiles.length || null
+            console.log(`Counting thumbnails from Blob for: ${bookName}`)
+            const blobs = await listFiles(`thumbnails/${bookName}/`)
+            console.log(`Found ${blobs.length} blobs for ${bookName}`)
+            return blobs.length || null
         } catch (error) {
-            console.error('Error counting thumbnails:', error)
+            console.error('Error counting thumbnails from Blob:', error)
+            return null
         }
-    }
+    } else {
+        // ספור תמונות מקומיות
+        const thumbnailsPath = path.join(THUMBNAILS_PATH, bookName)
 
-    console.warn(`Thumbnails directory not found: ${thumbnailsPath}`)
-    return null
+        if (fs.existsSync(thumbnailsPath)) {
+            try {
+                const files = fs.readdirSync(thumbnailsPath)
+                const imageFiles = files.filter(f => {
+                    const ext = path.extname(f).toLowerCase()
+                    return ['.jpg', '.jpeg', '.png', '.webp'].includes(ext)
+                })
+                console.log(`Found ${imageFiles.length} thumbnail images for ${bookName}`)
+                return imageFiles.length || null
+            } catch (error) {
+                console.error('Error counting thumbnails:', error)
+            }
+        }
+
+        console.warn(`Thumbnails directory not found: ${thumbnailsPath}`)
+        return null
+    }
 }
