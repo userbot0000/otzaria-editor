@@ -52,10 +52,9 @@ export default function BookPage() {
   const loadBookData = async () => {
     try {
       setLoading(true)
-      // bookPath כבר מפוענח, אז נשתמש בו ישירות ב-URL
-      // Next.js ידאג לקידוד הנכון
+      // שימוש ב-query parameter במקום path parameter
       console.log('📤 Loading book:', bookPath)
-      const response = await fetch(`/api/book/${encodeURIComponent(bookPath)}`)
+      const response = await fetch(`/api/book-by-name?name=${encodeURIComponent(bookPath)}`)
       const result = await response.json()
       
       if (result.success) {
