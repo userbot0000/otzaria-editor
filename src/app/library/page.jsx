@@ -13,7 +13,7 @@ export default function LibraryPage() {
   const router = useRouter()
   const [searchTerm, setSearchTerm] = useState('')
   const [filterStatus, setFilterStatus] = useState('all')
-  const [viewMode, setViewMode] = useState('tree') // tree or list
+  const [viewMode, setViewMode] = useState('list') // רק רשימה
   const [selectedFile, setSelectedFile] = useState(null)
   const [libraryData, setLibraryData] = useState([])
   const [loading, setLoading] = useState(true)
@@ -274,45 +274,13 @@ export default function LibraryPage() {
                       )}
                     </div>
 
-                    {/* View Mode Toggle */}
-                    <div className="flex gap-1 border-2 border-surface-variant rounded-lg p-1 bg-surface/30">
-                      <button
-                        onClick={() => setViewMode('tree')}
-                        className={`
-                          px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5
-                          ${viewMode === 'tree' 
-                            ? 'bg-primary-container text-primary border-2 border-primary' 
-                            : 'text-on-surface hover:bg-surface'}
-                        `}
-                        title="תצוגת עץ"
-                      >
-                        <span className="material-symbols-outlined text-lg">account_tree</span>
-                        <span className="text-sm font-medium hidden md:inline">עץ</span>
-                      </button>
-                      <button
-                        onClick={() => setViewMode('list')}
-                        className={`
-                          px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5
-                          ${viewMode === 'list' 
-                            ? 'bg-primary-container text-primary border-2 border-primary' 
-                            : 'text-on-surface hover:bg-surface'}
-                        `}
-                        title="תצוגת רשימה"
-                      >
-                        <span className="material-symbols-outlined text-lg">list</span>
-                        <span className="text-sm font-medium hidden md:inline">רשימה</span>
-                      </button>
-                    </div>
+
                   </div>
                 </div>
 
                 {/* Content Area - No scroll, infinite */}
                 <div className="p-6">
-                  {viewMode === 'tree' ? (
-                    <LibraryTree items={filteredData} onFileClick={handleFileClick} />
-                  ) : (
-                    <ListView items={filteredData} onFileClick={handleFileClick} />
-                  )}
+                  <ListView items={filteredData} onFileClick={handleFileClick} />
 
                   {Array.isArray(filteredData) && filteredData.length === 0 && (
                     <div className="text-center py-20">
