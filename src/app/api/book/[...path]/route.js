@@ -166,23 +166,12 @@ export async function GET(request, { params }) {
         console.log('Book path:', bookPath)
         const decodedPath = decodeURIComponent(bookPath)
         console.log('Decoded path:', decodedPath)
-        const fullPath = path.join(LIBRARY_PATH, decodedPath)
-        console.log('Full path:', fullPath)
 
-        if (!fs.existsSync(fullPath)) {
-            console.log('File not found:', fullPath)
-            return NextResponse.json(
-                { success: false, error: 'הספר לא נמצא' },
-                { status: 404 }
-            )
-        }
-
-        const stats = fs.statSync(fullPath)
         const bookName = path.basename(decodedPath, '.pdf')
 
-        // קרא את מספר העמודים ממטא-דאטה או השתמש בהערכה
-        let numPages = await getPageCountFromMeta(fullPath) || estimatePages(stats.size)
-        console.log(`Book "${bookName}" has ${numPages} pages (from meta or estimate)`)
+        // קרא את מספר העמודים ממטא-דאטה או מספר התמונות
+        let numPages = await getPageCountFromMeta(bookName) || await getPageCountFromThumbnails(bookName) || 10
+        console.log(`Book "${bookName}" has ${numPages} pages`)
 
         // טען או צור נתוני עמודים
         const pagesDataFile = `data/pages/${bookName}.json`
@@ -206,8 +195,6 @@ export async function GET(request, { params }) {
             book: {
                 name: bookName,
                 path: decodedPath,
-                size: stats.size,
-                lastModified: stats.mtime,
                 totalPages: numPages,
             },
             pages: pagesData,
@@ -275,14 +262,14 @@ function createPagesData(numPages, existingData = [], bookPath) {
 }
 
 // קריאת מספר עמודים ממטא-דאטה
-async function getPageCountFromMeta(pdfPath) {
-    const metaPath = pdfPath + '.meta.json'
+async function getPageCountFromMeta(bookName) {
+    const metaPath = path.join(process.cwd(), 'public', 'assets', 'library', `${bookName}.pdf.meta.json`)
 
     if (fs.existsSync(metaPath)) {
         try {
             const meta = fs.readFileSync(metaPath, 'utf-8')
             const parsed = JSON.parse(meta)
-            console.log(`Found meta file for ${path.basename(pdfPath)}: ${parsed.pages} pages`)
+            console.log(`Found meta file for ${bookName}: ${parsed.pages} pages`)
             return parsed.pages || null
         } catch (error) {
             console.error('Error reading meta file:', error)
@@ -292,10 +279,20 @@ async function getPageCountFromMeta(pdfPath) {
     return null
 }
 
-// הערכת מספר עמודים לפי גודל קובץ (fallback)
-function estimatePages(fileSize) {
-    // הערכה גסה: כל 50KB = עמוד אחד
-    const estimated = Math.ceil(fileSize / 50000)
-    // הגבל בין 10 ל-500 עמודים
-    return Math.min(Math.max(estimated, 10), 500)
+// קריאת מספר עמודים מספירת תמונות
+async function getPageCountFromThumbnails(bookName) {
+    const thumbnailsPath = path.join(process.cwd(), 'public', 'thumbnails', bookName)
+
+    if (fs.existsSync(thumbnailsPath)) {
+        try {
+            const files = fs.readdirSync(thumbnailsPath)
+            const imageFiles = files.filter(f => f.endsWith('.jpg') || f.endsWith('.png'))
+            console.log(`Found ${imageFiles.length} thumbnail images for ${bookName}`)
+            return imageFiles.length || null
+        } catch (error) {
+            console.error('Error counting thumbnails:', error)
+        }
+    }
+
+    return null
 }
