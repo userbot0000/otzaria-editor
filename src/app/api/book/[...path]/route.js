@@ -166,12 +166,23 @@ async function handleCompletePage(bookPath, pageNumber, userId) {
 
 export async function GET(request, { params }) {
     try {
-        console.log('📥 API called with params:', params)
+        console.log('📥 API called')
+        console.log('   Full params:', JSON.stringify(params))
+        console.log('   params.path:', params?.path)
+        console.log('   Request URL:', request.url)
         
         // בדוק שיש params.path
         if (!params || !params.path) {
+            console.error('❌ Missing params.path!')
             return NextResponse.json(
-                { success: false, error: 'חסר נתיב לספר' },
+                { 
+                    success: false, 
+                    error: 'חסר נתיב לספר',
+                    debug: {
+                        params: params,
+                        url: request.url
+                    }
+                },
                 { status: 400 }
             )
         }
