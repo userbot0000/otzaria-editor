@@ -1,11 +1,10 @@
 'use client'
 
-import { useSession, signOut } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
-import { getAvatarColor, getInitial } from '@/lib/avatar-colors'
+import Header from '@/components/Header'
 
 export default function DashboardPage() {
   const { data: session, status } = useSession()
@@ -67,32 +66,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="glass-strong border-b border-surface-variant">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3">
-            <Image src="/logo.png" alt="לוגו אוצריא" width={40} height={40} />
-            <span className="text-xl font-bold text-primary">ספריית אוצריא</span>
-          </Link>
-          
-          <div className="flex items-center gap-4">
-            <div 
-              className="w-10 h-10 rounded-full text-white flex items-center justify-center font-bold text-base shadow-md"
-              style={{ backgroundColor: getAvatarColor(session.user.name) }}
-              title={session.user.name}
-            >
-              {getInitial(session.user.name)}
-            </div>
-            <button
-              onClick={() => signOut({ callbackUrl: '/' })}
-              className="flex items-center gap-2 px-4 py-2 text-on-surface hover:text-primary transition-colors"
-            >
-              <span className="material-symbols-outlined">logout</span>
-              <span>התנתק</span>
-            </button>
-          </div>
-        </div>
-      </header>
+      <Header />
 
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-6xl mx-auto">

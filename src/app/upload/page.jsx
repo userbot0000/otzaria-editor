@@ -3,9 +3,7 @@
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { getAvatarColor, getInitial } from '@/lib/avatar-colors'
+import Header from '@/components/Header'
 
 export default function UploadPage() {
     const { data: session, status } = useSession()
@@ -127,38 +125,7 @@ export default function UploadPage() {
 
     return (
         <div className="min-h-screen bg-background">
-            {/* Header */}
-            <header className="glass-strong border-b border-surface-variant">
-                <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-                    <Link href="/" className="flex items-center gap-3">
-                        <Image src="/logo.png" alt="לוגו אוצריא" width={40} height={40} />
-                        <span className="text-xl font-bold text-primary">ספריית אוצריא</span>
-                    </Link>
-
-                    <div className="flex items-center gap-4">
-                        <Link
-                            href="/dashboard"
-                            className="flex items-center gap-2 text-on-surface hover:text-primary transition-colors"
-                        >
-                            <span className="material-symbols-outlined">arrow_forward</span>
-                            <span>חזרה לאיזור האישי</span>
-                        </Link>
-                        <div className="w-px h-8 bg-surface-variant"></div>
-                        <Link 
-                            href="/dashboard" 
-                            className="flex items-center justify-center hover:opacity-80 transition-opacity"
-                            title={session.user.name}
-                        >
-                            <div 
-                                className="w-10 h-10 rounded-full text-white flex items-center justify-center font-bold text-base shadow-md hover:shadow-lg transition-shadow"
-                                style={{ backgroundColor: getAvatarColor(session.user.name) }}
-                            >
-                                {getInitial(session.user.name)}
-                            </div>
-                        </Link>
-                    </div>
-                </div>
-            </header>
+            <Header />
 
             <div className="container mx-auto px-4 py-12">
                 <div className="max-w-3xl mx-auto">
