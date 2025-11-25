@@ -2,9 +2,13 @@ import { put } from '@vercel/blob'
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import dotenv from 'dotenv'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+// טען את .env.local
+dotenv.config({ path: path.join(__dirname, '..', '.env.local') })
 
 const THUMBNAILS_PATH = path.join(__dirname, '..', 'public', 'thumbnails')
 const BLOB_PREFIX = process.env.VERCEL_ENV === 'production' ? 'prod/' : 'dev/'
