@@ -1,6 +1,7 @@
 import { put, del, list, head } from '@vercel/blob'
 
-const BLOB_PREFIX = process.env.VERCEL_ENV === 'production' ? 'prod/' : 'dev/'
+// כרגע כל הנתונים ב-dev/ כולל production
+const BLOB_PREFIX = 'dev/'
 
 // שמירת קובץ JSON
 export async function saveJSON(path, data) {
