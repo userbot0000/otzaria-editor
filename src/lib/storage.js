@@ -1,4 +1,5 @@
 import { put, del, list, head } from '@vercel/blob'
+import { logger } from './logger'
 
 // כרגע כל הנתונים ב-dev/ כולל production
 const BLOB_PREFIX = 'dev/'
@@ -27,16 +28,16 @@ export async function saveJSON(path, data) {
           addRandomSuffix: false,
           allowOverwrite: true
         })
-        console.log(`✅ Backup saved: ${backupPath}`)
+        logger.log(`✅ Backup saved: ${backupPath}`)
       } catch (backupError) {
-        console.warn('⚠️  Failed to save backup:', backupError)
+        logger.warn('⚠️  Failed to save backup:', backupError)
         // לא נזרוק שגיאה כי הקובץ הראשי נשמר
       }
     }
     
     return blob
   } catch (error) {
-    console.error('❌ Error saving JSON:', error)
+    logger.error('❌ Error saving JSON:', error)
     throw error
   }
 }
@@ -51,14 +52,14 @@ export async function readJSON(path) {
       const response = await fetch(blobs.blobs[0].url)
       if (response.ok) {
         const data = await response.json()
-        console.log(`✅ Loaded JSON from: ${path}`)
+        logger.log(`✅ Loaded JSON from: ${path}`)
         return data
       }
     }
     
     // אם הקובץ הראשי לא נמצא, נסה למצוא גיבוי
     if (path.includes('data/pages/')) {
-      console.warn(`⚠️  Main file not found: ${path}, searching for backup...`)
+      logger.warn(`⚠️  Main file not found: ${path}, searching for backup...`)
       const backupPath = path.replace('.json', '_backup_')
       const backupBlobs = await list({ prefix: BLOB_PREFIX + backupPath })
       
@@ -68,11 +69,11 @@ export async function readJSON(path) {
           new Date(b.uploadedAt) - new Date(a.uploadedAt)
         )
         
-        console.log(`📦 Found ${sortedBackups.length} backups, using latest`)
+        logger.log(`📦 Found ${sortedBackups.length} backups, using latest`)
         const response = await fetch(sortedBackups[0].url)
         if (response.ok) {
           const data = await response.json()
-          console.log(`✅ Restored from backup: ${sortedBackups[0].pathname}`)
+          logger.log(`✅ Restored from backup: ${sortedBackups[0].pathname}`)
           
           // שחזר את הקובץ הראשי
           await saveJSON(path, data)
@@ -81,10 +82,10 @@ export async function readJSON(path) {
       }
     }
     
-    console.warn(`❌ No file or backup found for: ${path}`)
+    logger.warn(`❌ No file or backup found for: ${path}`)
     return null
   } catch (error) {
-    console.error('❌ Error reading JSON:', error)
+    logger.error('❌ Error reading JSON:', error)
     return null
   }
 }
@@ -100,7 +101,7 @@ export async function saveText(path, content) {
     })
     return blob
   } catch (error) {
-    console.error('Error saving text:', error)
+    logger.error('Error saving text:', error)
     throw error
   }
 }
@@ -115,7 +116,7 @@ export async function readText(path) {
     if (!response.ok) return null
     return await response.text()
   } catch (error) {
-    console.error('Error reading text:', error)
+    logger.error('Error reading text:', error)
     return null
   }
 }
@@ -125,7 +126,7 @@ export async function deleteFile(url) {
   try {
     await del(url)
   } catch (error) {
-    console.error('Error deleting file:', error)
+    logger.error('Error deleting file:', error)
   }
 }
 
@@ -133,15 +134,15 @@ export async function deleteFile(url) {
 export async function listFiles(prefix) {
   try {
     const fullPrefix = BLOB_PREFIX + prefix
-    console.log('🔍 Listing files with prefix:', fullPrefix)
+    logger.log('🔍 Listing files with prefix:', fullPrefix)
     const { blobs } = await list({ prefix: fullPrefix })
-    console.log('📦 Found blobs:', blobs.length)
+    logger.log('📦 Found blobs:', blobs.length)
     if (blobs.length > 0) {
-      console.log('📄 First blob:', blobs[0].pathname)
+      logger.log('📄 First blob:', blobs[0].pathname)
     }
     return blobs
   } catch (error) {
-    console.error('Error listing files:', error)
+    logger.error('Error listing files:', error)
     return []
   }
 }
@@ -167,7 +168,7 @@ export async function saveImage(path, imageBuffer, contentType = 'image/jpeg') {
     })
     return blob
   } catch (error) {
-    console.error('Error saving image:', error)
+    logger.error('Error saving image:', error)
     throw error
   }
 }
@@ -179,7 +180,7 @@ export async function getImageUrl(path) {
     if (blobs.blobs.length === 0) return null
     return blobs.blobs[0].url
   } catch (error) {
-    console.error('Error getting image URL:', error)
+    logger.error('Error getting image URL:', error)
     return null
   }
 }

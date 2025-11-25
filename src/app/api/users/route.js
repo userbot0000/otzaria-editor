@@ -2,10 +2,22 @@ import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '../auth/[...nextauth]/route'
 import { getAllUsers, updateUserRole, deleteUser } from '@/lib/auth'
+import { apiLimiter, getClientIp } from '@/lib/rate-limit'
 
 // קבלת כל המשתמשים (למנהלים בלבד)
 export async function GET(request) {
   try {
+    // Rate limiting
+    const ip = getClientIp(request)
+    const rateLimitResult = apiLimiter.check(10, ip)
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'יותר מדי בקשות. נסה שוב בעוד דקה' },
+        { status: 429 }
+      )
+    }
+
     const session = await getServerSession(authOptions)
     
     if (!session || session.user.role !== 'admin') {
@@ -28,6 +40,17 @@ export async function GET(request) {
 // עדכון תפקיד משתמש
 export async function PATCH(request) {
   try {
+    // Rate limiting
+    const ip = getClientIp(request)
+    const rateLimitResult = apiLimiter.check(10, ip)
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'יותר מדי בקשות. נסה שוב בעוד דקה' },
+        { status: 429 }
+      )
+    }
+
     const session = await getServerSession(authOptions)
     
     if (!session || session.user.role !== 'admin') {
@@ -59,6 +82,17 @@ export async function PATCH(request) {
 // מחיקת משתמש
 export async function DELETE(request) {
   try {
+    // Rate limiting
+    const ip = getClientIp(request)
+    const rateLimitResult = apiLimiter.check(10, ip)
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'יותר מדי בקשות. נסה שוב בעוד דקה' },
+        { status: 429 }
+      )
+    }
+
     const session = await getServerSession(authOptions)
     
     if (!session || session.user.role !== 'admin') {

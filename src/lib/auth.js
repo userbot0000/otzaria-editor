@@ -1,5 +1,6 @@
 import { compare, hash } from 'bcryptjs'
 import { readJSON, saveJSON } from './storage'
+import { logger } from './logger'
 
 const USERS_FILE = 'data/users.json'
 
@@ -9,7 +10,7 @@ async function loadUsers() {
     const data = await readJSON(USERS_FILE)
     return data || []
   } catch (error) {
-    console.error('Error loading users:', error)
+    logger.error('Error loading users:', error)
     return []
   }
 }
@@ -19,7 +20,7 @@ async function saveUsers(users) {
   try {
     await saveJSON(USERS_FILE, users)
   } catch (error) {
-    console.error('Error saving users:', error)
+    logger.error('Error saving users:', error)
     throw error
   }
 }

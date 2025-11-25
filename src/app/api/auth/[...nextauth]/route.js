@@ -1,6 +1,7 @@
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import { getUserByEmailOrUsername, verifyPassword } from '@/lib/auth'
+import { authLimiter, getClientIp } from '@/lib/rate-limit'
 
 export const authOptions = {
   providers: [
@@ -10,9 +11,17 @@ export const authOptions = {
         identifier: { label: 'Email or Username', type: 'text' },
         password: { label: 'Password', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         if (!credentials?.identifier || !credentials?.password) {
           throw new Error('נא למלא את כל השדות')
+        }
+
+        // Rate limiting - 5 ניסיונות ל-15 דקות
+        const identifier = credentials.identifier.toLowerCase()
+        const rateLimitResult = authLimiter.check(5, identifier)
+        
+        if (!rateLimitResult.success) {
+          throw new Error('יותר מדי ניסיונות התחברות. נסה שוב בעוד 15 דקות')
         }
 
         const user = await getUserByEmailOrUsername(credentials.identifier)

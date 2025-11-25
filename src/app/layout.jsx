@@ -1,5 +1,6 @@
 import '../styles/globals.css'
 import SessionProvider from '@/components/SessionProvider'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 export const metadata = {
   title: 'ספריית אוצריא | פלטפורמה משותפת לעריכת ספרי קודש',
@@ -17,7 +18,9 @@ export default function RootLayout({ children }) {
         />
       </head>
       <body>
-        <SessionProvider>{children}</SessionProvider>
+        <ErrorBoundary>
+          <SessionProvider>{children}</SessionProvider>
+        </ErrorBoundary>
       </body>
     </html>
   )
