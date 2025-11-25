@@ -164,14 +164,19 @@ export async function GET(request, { params }) {
     try {
         console.log('📥 API called with params:', params)
         
-        // Next.js כבר מפענח את ה-URL params אוטומטית
-        const bookPath = Array.isArray(params.path) ? params.path.join('/') : params.path
-        console.log('   Book path (from params):', bookPath)
+        // Next.js API routes מפענחים את params אוטומטית
+        let bookPath = Array.isArray(params.path) ? params.path.join('/') : params.path
+        
+        // אם זה עדיין מקודד (לפעמים Next.js לא מפענח), פענח אותו
+        if (bookPath.includes('%')) {
+            bookPath = decodeURIComponent(bookPath)
+            console.log('   Decoded path:', bookPath)
+        }
+        
+        console.log('   Book path:', bookPath)
         console.log('   Book path length:', bookPath.length)
         console.log('   Book path char codes:', Array.from(bookPath).map(c => c.charCodeAt(0)))
         
-        // אם זה כבר מפוענח, אל תפענח שוב
-        // אחרת זה יכול לגרום לבעיות עם תווים מיוחדים
         const bookName = bookPath
 
         // קרא את מספר העמודים מספירת התמונות

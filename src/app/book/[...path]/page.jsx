@@ -30,10 +30,14 @@ export default function BookPage() {
   const { data: session } = useSession()
   const router = useRouter()
   const params = useParams()
-  // Next.js מפענח את params.path אוטומטית, אז לא צריך decodeURIComponent
-  const bookPath = Array.isArray(params.path) ? params.path.join('/') : params.path
   
-  console.log('📖 BookPage loaded with path:', bookPath)
+  // פענח את ה-path (Next.js לא תמיד מפענח אוטומטית)
+  const rawPath = Array.isArray(params.path) ? params.path.join('/') : params.path
+  const bookPath = decodeURIComponent(rawPath)
+  
+  console.log('📖 BookPage loaded')
+  console.log('   Raw path:', rawPath)
+  console.log('   Decoded path:', bookPath)
   
   const [bookData, setBookData] = useState(null)
   const [pages, setPages] = useState([])
@@ -48,10 +52,10 @@ export default function BookPage() {
   const loadBookData = async () => {
     try {
       setLoading(true)
-      // קודד את bookPath ל-URL (כי הוא כבר מפוענח מ-params)
-      const encodedPath = encodeURIComponent(bookPath)
-      console.log('📤 Loading book:', { bookPath, encodedPath })
-      const response = await fetch(`/api/book/${encodedPath}`)
+      // bookPath כבר מפוענח, אז נשתמש בו ישירות ב-URL
+      // Next.js ידאג לקידוד הנכון
+      console.log('📤 Loading book:', bookPath)
+      const response = await fetch(`/api/book/${encodeURIComponent(bookPath)}`)
       const result = await response.json()
       
       if (result.success) {
