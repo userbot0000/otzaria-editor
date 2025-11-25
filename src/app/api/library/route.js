@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { loadLibraryStructure } from '@/lib/library-loader'
 
+export const runtime = 'nodejs'
+
 export async function GET() {
   try {
     const structure = await loadLibraryStructure()

@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { saveJSON, readJSON } from '@/lib/storage'
 
+export const runtime = 'nodejs'
+
 export async function POST(request) {
     try {
         const body = await request.json()

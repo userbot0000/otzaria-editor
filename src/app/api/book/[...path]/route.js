@@ -3,8 +3,12 @@ import { saveJSON, readJSON, listFiles } from '@/lib/storage'
 import path from 'path'
 import fs from 'fs'
 
-const THUMBNAILS_PATH = path.join(process.cwd(), 'public', 'thumbnails')
+// ב-production (Vercel) תמיד נשתמש ב-Blob Storage
 const USE_BLOB = process.env.USE_BLOB_STORAGE === 'true' || process.env.VERCEL_ENV === 'production'
+const THUMBNAILS_PATH = path.join(process.cwd(), 'public', 'thumbnails')
+
+// הגדר את runtime ל-nodejs (לא edge) כדי לתמוך ב-fs
+export const runtime = 'nodejs'
 
 export async function POST(request, { params }) {
     try {
