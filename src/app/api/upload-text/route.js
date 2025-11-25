@@ -1,10 +1,5 @@
 import { NextResponse } from 'next/server'
-import { saveJSON, readJSON, saveText, readText, listFiles } from '@/lib/storage'
-import path from 'path'
-
-const UPLOADS_PATH = path.join(process.cwd(), 'public', 'uploads', 'texts')
-
-// יצירת תיקייה אם לא קיימת
+import { saveJSON, saveText, listFiles } from '@/lib/storage'
 
 
 export async function POST(request) {
@@ -38,7 +33,7 @@ export async function POST(request) {
     // צור שם קובץ בטוח
     const safeName = (bookName || file.name.replace('.txt', '')).replace(/[^a-zA-Z0-9א-ת\s]/g, '_')
     const fileName = `${safeName}.txt`
-    const filePath = path.join(UPLOADS_PATH, fileName)
+    const filePath = `data/uploads/${fileName}`
 
     // שמור את הקובץ
     await saveText(filePath, content)
@@ -54,8 +49,8 @@ export async function POST(request) {
       lines: content.split('\n').length
     }
 
-    const metaPath = path.join(UPLOADS_PATH, `${safeName}.meta.json`)
-    fs.writeFileSync(metaPath, JSON.stringify(metaData, null, 2), 'utf-8')
+    const metaPath = `data/uploads/${safeName}.meta.json`
+    await saveJSON(metaPath, metaData)
 
     console.log(`✅ Text file uploaded: ${fileName}`)
 
@@ -75,15 +70,14 @@ export async function POST(request) {
 
 export async function GET() {
   try {
+    const blobs = await listFiles('data/uploads/')
     const files = []
-
-    if (fs.existsSync(UPLOADS_PATH)) {
-      const items = fs.readdirSync(UPLOADS_PATH)
-      
-      for (const item of items) {
-        if (item.endsWith('.meta.json')) {
-          const metaPath = path.join(UPLOADS_PATH, item)
-          const meta = JSON.parse(await readText(metaPath))
+    
+    for (const blob of blobs) {
+      if (blob.pathname.endsWith('.meta.json')) {
+        const response = await fetch(blob.url)
+        if (response.ok) {
+          const meta = await response.json()
           files.push(meta)
         }
       }

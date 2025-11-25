@@ -1,12 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/app/api/auth/[...nextauth]/route'
-import fs from 'fs'
-import path from 'path'
-
-const CONTENT_PATH = path.join(process.cwd(), 'data', 'content')
-const PAGES_PATH = path.join(process.cwd(), 'data', 'pages')
-const UPLOADS_PATH = path.join(process.cwd(), 'data', 'uploads')
+import { deleteFile, listFiles } from '@/lib/storage'
 
 export async function DELETE(request) {
   try {
@@ -28,22 +23,15 @@ export async function DELETE(request) {
       )
     }
 
-    // מחק את קובץ התוכן
-    const contentFile = path.join(CONTENT_PATH, `${bookPath}.json`)
-    if (fs.existsSync(contentFile)) {
-      fs.unlinkSync(contentFile)
-    }
-
-    // מחק את קובץ העמודים
-    const pagesFile = path.join(PAGES_PATH, `${bookPath}.json`)
-    if (fs.existsSync(pagesFile)) {
-      fs.unlinkSync(pagesFile)
-    }
-
-    // מחק את תיקיית התמונות
-    const imagesDir = path.join(UPLOADS_PATH, bookPath)
-    if (fs.existsSync(imagesDir)) {
-      fs.rmSync(imagesDir, { recursive: true, force: true })
+    // מחק קבצים מ-Blob Storage
+    const blobs = await listFiles(`data/`)
+    
+    for (const blob of blobs) {
+      // מחק קבצים הקשורים לספר הזה
+      if (blob.pathname.includes(bookPath)) {
+        await deleteFile(blob.url)
+        console.log(`Deleted: ${blob.pathname}`)
+      }
     }
 
     return NextResponse.json({ success: true })
