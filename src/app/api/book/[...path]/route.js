@@ -168,18 +168,26 @@ export async function GET(request, { params }) {
     try {
         console.log('📥 API called with params:', params)
         
+        // בדוק שיש params.path
+        if (!params || !params.path) {
+            return NextResponse.json(
+                { success: false, error: 'חסר נתיב לספר' },
+                { status: 400 }
+            )
+        }
+        
         // Next.js API routes מפענחים את params אוטומטית
         let bookPath = Array.isArray(params.path) ? params.path.join('/') : params.path
         
         // אם זה עדיין מקודד (לפעמים Next.js לא מפענח), פענח אותו
-        if (bookPath.includes('%')) {
+        if (bookPath && bookPath.includes('%')) {
             bookPath = decodeURIComponent(bookPath)
             console.log('   Decoded path:', bookPath)
         }
         
         console.log('   Book path:', bookPath)
-        console.log('   Book path length:', bookPath.length)
-        console.log('   Book path char codes:', Array.from(bookPath).map(c => c.charCodeAt(0)))
+        console.log('   Book path length:', bookPath?.length)
+        console.log('   Book path char codes:', bookPath ? Array.from(bookPath).map(c => c.charCodeAt(0)) : 'N/A')
         
         const bookName = bookPath
 
