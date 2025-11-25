@@ -10,10 +10,10 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full glass-strong">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+      <div className="container mx-auto flex h-16 items-center justify-between px-8">
+        <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity mr-4">
           <Image src="/logo.png" alt="לוגו אוצריא" width={32} height={32} />
-          <span className="text-xl font-bold text-primary">ספריית אוצריא</span>
+          <span className="text-xl font-bold text-black" style={{ fontFamily: 'FrankRuehl, serif' }}>ספריית אוצריא</span>
         </Link>
         
         <nav className="hidden md:flex items-center gap-6">
