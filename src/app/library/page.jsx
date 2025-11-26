@@ -168,38 +168,89 @@ export default function LibraryPage() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
-          {/* Page Header - Full Width */}
-          <h1 className="text-4xl font-bold mb-6 text-on-surface" style={{ fontFamily: 'FrankRuehl, serif' }}>ספריית אוצריא</h1>
-          
-          {/* Search Bar - Full Width */}
-          <div className="mb-8">
-            <div className="relative">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="חיפוש ספר..."
-                className="w-full pr-12 pl-4 py-3 border border-surface-variant rounded-lg focus:outline-none focus:border-primary bg-white text-on-surface placeholder:text-on-surface/40 transition-colors shadow-sm"
-              />
-              <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface/40">
-                search
-              </span>
-              {searchTerm && (
-                <button
-                  onClick={() => setSearchTerm('')}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface/40 hover:text-on-surface transition-colors"
-                >
-                  <span className="material-symbols-outlined">close</span>
-                </button>
-              )}
+          {/* Top Container - Header + Search | Chart */}
+          <div className="grid lg:grid-cols-2 gap-6 mb-8">
+            {/* Left Side - Header + Search */}
+            <div>
+              <h1 className="text-4xl font-bold mb-6 text-on-surface" style={{ fontFamily: 'FrankRuehl, serif' }}>ספריית אוצריא</h1>
+              
+              <div className="relative">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="חיפוש ספר..."
+                  className="w-full pr-12 pl-4 py-3 border border-surface-variant rounded-lg focus:outline-none focus:border-primary bg-white text-on-surface placeholder:text-on-surface/40 transition-colors shadow-sm"
+                />
+                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface/40">
+                  search
+                </span>
+                {searchTerm && (
+                  <button
+                    onClick={() => setSearchTerm('')}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-on-surface/40 hover:text-on-surface transition-colors"
+                  >
+                    <span className="material-symbols-outlined">close</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Right Side - Chart */}
+            <div>
+              <WeeklyProgressChart />
             </div>
           </div>
 
-          {/* Chart + Stats Section */}
-          <div className="grid lg:grid-cols-6 gap-6 mb-8">
-            {/* Progress Chart - Takes 5 columns */}
+          {/* Bottom Container - Library Grid | Stats Cards */}
+          <div className="grid lg:grid-cols-6 gap-6">
+            {/* Library Section - Takes 5 columns */}
             <div className="lg:col-span-5">
-              <WeeklyProgressChart />
+              {/* Filter Tabs */}
+              <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+                <button
+                  onClick={() => setFilterStatus('all')}
+                  className={`
+                    px-4 py-2 rounded-lg transition-all font-medium whitespace-nowrap
+                    ${filterStatus === 'all' 
+                      ? 'bg-primary text-on-primary' 
+                      : 'bg-surface text-on-surface hover:bg-surface-variant'}
+                  `}
+                >
+                  הכל
+                </button>
+
+                {Object.entries(statusConfig).map(([key, config]) => (
+                  <button
+                    key={key}
+                    onClick={() => setFilterStatus(key)}
+                    className={`
+                      px-4 py-2 rounded-lg transition-all font-medium flex items-center gap-2 whitespace-nowrap
+                      ${filterStatus === key 
+                        ? 'bg-primary text-on-primary' 
+                        : 'bg-surface text-on-surface hover:bg-surface-variant'}
+                    `}
+                  >
+                    <span className="material-symbols-outlined text-lg">{config.icon}</span>
+                    <span>{config.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Books Grid */}
+              <CardGridView items={filteredData} onFileClick={handleFileClick} />
+
+              {Array.isArray(filteredData) && filteredData.length === 0 && (
+                <div className="text-center py-20">
+                  <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-surface mb-4">
+                    <span className="material-symbols-outlined text-5xl text-on-surface/30">
+                      search_off
+                    </span>
+                  </div>
+                  <p className="text-lg font-medium text-on-surface/70 mb-2">לא נמצאו תוצאות</p>
+                  <p className="text-sm text-on-surface/50">נסה לשנות את מונחי החיפוש או הסינון</p>
+                </div>
+              )}
             </div>
 
             {/* Stats Cards (Vertical) - Takes 1 column */}
@@ -235,52 +286,6 @@ export default function LibraryPage() {
               </div>
             </div>
           </div>
-
-          {/* Filter Tabs */}
-          <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-            <button
-              onClick={() => setFilterStatus('all')}
-              className={`
-                px-4 py-2 rounded-lg transition-all font-medium whitespace-nowrap
-                ${filterStatus === 'all' 
-                  ? 'bg-primary text-on-primary' 
-                  : 'bg-surface text-on-surface hover:bg-surface-variant'}
-              `}
-            >
-              הכל
-            </button>
-
-            {Object.entries(statusConfig).map(([key, config]) => (
-              <button
-                key={key}
-                onClick={() => setFilterStatus(key)}
-                className={`
-                  px-4 py-2 rounded-lg transition-all font-medium flex items-center gap-2 whitespace-nowrap
-                  ${filterStatus === key 
-                    ? 'bg-primary text-on-primary' 
-                    : 'bg-surface text-on-surface hover:bg-surface-variant'}
-                `}
-              >
-                <span className="material-symbols-outlined text-lg">{config.icon}</span>
-                <span>{config.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Books Grid */}
-          <CardGridView items={filteredData} onFileClick={handleFileClick} />
-
-          {Array.isArray(filteredData) && filteredData.length === 0 && (
-            <div className="text-center py-20">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-surface mb-4">
-                <span className="material-symbols-outlined text-5xl text-on-surface/30">
-                  search_off
-                </span>
-              </div>
-              <p className="text-lg font-medium text-on-surface/70 mb-2">לא נמצאו תוצאות</p>
-              <p className="text-sm text-on-surface/50">נסה לשנות את מונחי החיפוש או הסינון</p>
-            </div>
-          )}
         </div>
       </div>
 
