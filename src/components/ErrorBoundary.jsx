@@ -1,7 +1,6 @@
 'use client'
 
 import { Component } from 'react'
-import Link from 'next/link'
 
 export default class ErrorBoundary extends Component {
   constructor(props) {
@@ -43,12 +42,12 @@ export default class ErrorBoundary extends Component {
               >
                 נסה שוב
               </button>
-              <Link
-                href="/"
+              <button
+                onClick={() => window.location.href = '/'}
                 className="px-6 py-2 border border-primary text-primary rounded-lg hover:bg-primary-container transition-colors"
               >
                 חזור לדף הבית
-              </Link>
+              </button>
             </div>
           </div>
         </div>
