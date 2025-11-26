@@ -3,8 +3,22 @@ import { listFiles, readJSON } from '@/lib/storage'
 
 export const runtime = 'nodejs'
 
+// Cache למשך 5 דקות
+let cachedData = null
+let cacheTime = null
+const CACHE_DURATION = 5 * 60 * 1000 // 5 דקות
+
 export async function GET() {
   try {
+    // בדוק אם יש cache תקף
+    const now = Date.now()
+    if (cachedData && cacheTime && (now - cacheTime) < CACHE_DURATION) {
+      console.log('✅ Returning cached weekly progress data')
+      return NextResponse.json(cachedData)
+    }
+
+    console.log('🔄 Calculating weekly progress...')
+    
     // קבל את כל קבצי העמודים
     const pageFiles = await listFiles('data/pages/')
     
@@ -54,11 +68,17 @@ export async function GET() {
     // חשב סה"כ
     const totalPages = last7Days.reduce((sum, day) => sum + day.pages, 0)
     
-    return NextResponse.json({
+    const result = {
       success: true,
       data: last7Days,
       total: totalPages
-    })
+    }
+
+    // שמור ב-cache
+    cachedData = result
+    cacheTime = now
+    
+    return NextResponse.json(result)
   } catch (error) {
     console.error('Error getting weekly progress:', error)
     return NextResponse.json(

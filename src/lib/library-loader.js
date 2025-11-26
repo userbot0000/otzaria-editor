@@ -9,30 +9,54 @@ const THUMBNAILS_PATH = path.join(process.cwd(), 'public', 'thumbnails')
 // האם להשתמש ב-Blob Storage או בקבצים מקומיים
 const USE_BLOB = process.env.USE_BLOB_STORAGE === 'true' || process.env.VERCEL_ENV === 'production'
 
+// Cache למבנה הספרייה - 10 דקות
+let cachedStructure = null
+let cacheTime = null
+const CACHE_DURATION = 10 * 60 * 1000 // 10 דקות
+
 /**
  * קריאת מבנה הספרייה מתיקיית התמונות
  * כל תיקייה = ספר, כל תמונה = עמוד
  */
 export async function loadLibraryStructure() {
+  // בדוק cache
+  const now = Date.now()
+  if (cachedStructure && cacheTime && (now - cacheTime) < CACHE_DURATION) {
+    logger.log('✅ Returning cached library structure')
+    return cachedStructure
+  }
   try {
     logger.log('🚀 Loading library structure...')
     logger.log('   USE_BLOB:', USE_BLOB)
     logger.log('   VERCEL_ENV:', process.env.VERCEL_ENV)
     logger.log('   USE_BLOB_STORAGE:', process.env.USE_BLOB_STORAGE)
     
+    let structure
     if (USE_BLOB) {
       logger.log('   📦 Using Blob Storage')
-      return await scanBlobThumbnails()
+      structure = await scanBlobThumbnails()
     } else {
       logger.log('   📁 Using local filesystem')
       if (!fs.existsSync(THUMBNAILS_PATH)) {
         logger.warn('Thumbnails directory does not exist:', THUMBNAILS_PATH)
         return []
       }
-      return scanThumbnailsDirectory()
+      structure = scanThumbnailsDirectory()
     }
+
+    // שמור ב-cache
+    cachedStructure = structure
+    cacheTime = now
+    logger.log('💾 Cached library structure')
+
+    return structure
   } catch (error) {
     logger.error('Error loading library structure:', error)
+    // אם יש cache ישן, החזר אותו במקרה של שגיאה
+    if (cachedStructure) {
+      logger.log('⚠️  Returning stale cache due to error')
+      return cachedStructure
+    }
     return []
   }
 }
