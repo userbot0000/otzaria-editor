@@ -135,3 +135,18 @@ export async function deleteUser(userId) {
   }
   return false
 }
+
+// פונקציה לעדכון סיסמה
+export async function updateUserPassword(userId, newHashedPassword) {
+  const users = await getUsers(true)
+  const user = users.find(u => u.id === userId)
+  if (user) {
+    user.password = newHashedPassword
+    user.passwordChangedAt = new Date().toISOString()
+    await saveUsers(users)
+    usersCache = users // עדכן cache
+    lastLoad = Date.now()
+    return true
+  }
+  return false
+}

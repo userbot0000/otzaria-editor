@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Header from '@/components/Header'
+import ChangePasswordForm from '@/components/ChangePasswordForm'
 
 export default function DashboardPage() {
   const { data: session, status } = useSession()
@@ -151,7 +152,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Recent Activity */}
-          <div className="glass-strong p-8 rounded-2xl">
+          <div className="glass-strong p-8 rounded-2xl mb-8">
             <h2 className="text-2xl font-bold mb-6 text-on-surface">העמודים שלי</h2>
             {loading ? (
               <div className="text-center py-8">
@@ -201,6 +202,9 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+
+          {/* Change Password Section */}
+          <ChangePasswordForm />
         </div>
       </div>
     </div>
