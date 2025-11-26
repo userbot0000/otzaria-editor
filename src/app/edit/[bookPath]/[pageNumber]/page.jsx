@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
@@ -38,9 +38,9 @@ export default function EditPage() {
     } else if (status === 'authenticated') {
       loadPageData()
     }
-  }, [status, bookPath, pageNumber])
+  }, [status, router, loadPageData])
 
-  const loadPageData = async () => {
+  const loadPageData = useCallback(async () => {
     try {
       setLoading(true)
       
@@ -71,7 +71,7 @@ export default function EditPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [bookPath, pageNumber])
 
   const handleSave = async () => {
     setSaving(true)
