@@ -9,6 +9,7 @@ import Footer from '@/components/Footer'
 export default function AdminClient({ session }) {
     const [users, setUsers] = useState([])
     const [books, setBooks] = useState([])
+    const [uploads, setUploads] = useState([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState('users')
     const [editingUser, setEditingUser] = useState(null)
@@ -21,16 +22,19 @@ export default function AdminClient({ session }) {
     const loadData = async () => {
         try {
             setLoading(true)
-            const [usersRes, booksRes] = await Promise.all([
+            const [usersRes, booksRes, uploadsRes] = await Promise.all([
                 fetch('/api/users/list'),
-                fetch('/api/library/list')
+                fetch('/api/library/list'),
+                fetch('/api/admin/uploads/list')
             ])
 
             const usersData = await usersRes.json()
             const booksData = await booksRes.json()
+            const uploadsData = await uploadsRes.json()
 
             if (usersData.success) setUsers(usersData.users)
             if (booksData.success) setBooks(booksData.books)
+            if (uploadsData.success) setUploads(uploadsData.uploads)
         } catch (error) {
             console.error('Error loading data:', error)
         } finally {
@@ -112,6 +116,27 @@ export default function AdminClient({ session }) {
         }
     }
 
+    const handleUpdateUploadStatus = async (uploadId, status) => {
+        try {
+            const response = await fetch('/api/admin/uploads/update-status', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ uploadId, status })
+            })
+
+            const result = await response.json()
+            if (result.success) {
+                setUploads(uploads.map(u => u.id === uploadId ? { ...u, status } : u))
+                alert(`ההעלאה ${status === 'approved' ? 'אושרה' : 'נדחתה'} בהצלחה!`)
+            } else {
+                alert(result.error || 'שגיאה בעדכון סטטוס')
+            }
+        } catch (error) {
+            console.error('Error updating upload status:', error)
+            alert('שגיאה בעדכון סטטוס')
+        }
+    }
+
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -154,7 +179,7 @@ export default function AdminClient({ session }) {
                         </div>
 
                         {/* Stats Overview */}
-                        <div className="grid md:grid-cols-4 gap-4 mb-8">
+                        <div className="grid md:grid-cols-5 gap-4 mb-8">
                             <div className="glass p-6 rounded-xl">
                                 <div className="flex items-center gap-3">
                                     <span className="material-symbols-outlined text-4xl text-blue-600">
@@ -202,6 +227,23 @@ export default function AdminClient({ session }) {
                                     </div>
                                 </div>
                             </div>
+
+                            <div className="glass p-6 rounded-xl">
+                                <div className="flex items-center gap-3">
+                                    <span className="material-symbols-outlined text-4xl text-orange-600">
+                                        upload_file
+                                    </span>
+                                    <div>
+                                        <p className="text-3xl font-bold text-on-surface">{uploads?.length || 0}</p>
+                                        <p className="text-on-surface/70 text-sm">העלאות</p>
+                                        {uploads?.filter(u => u.status === 'pending').length > 0 && (
+                                            <p className="text-xs text-orange-600 font-bold">
+                                                {uploads.filter(u => u.status === 'pending').length} ממתינות
+                                            </p>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         {/* Tabs */}
@@ -228,6 +270,18 @@ export default function AdminClient({ session }) {
                                 <span className="flex items-center gap-2">
                                     <span className="material-symbols-outlined">menu_book</span>
                                     ספרים
+                                </span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('uploads')}
+                                className={`px-6 py-3 rounded-lg font-medium transition-all ${activeTab === 'uploads'
+                                    ? 'bg-primary text-on-primary'
+                                    : 'glass text-on-surface hover:bg-surface-variant'
+                                    }`}
+                            >
+                                <span className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined">upload_file</span>
+                                    העלאות ({uploads?.filter(u => u.status === 'pending').length || 0})
                                 </span>
                             </button>
                             <button
@@ -405,6 +459,128 @@ export default function AdminClient({ session }) {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'uploads' && (
+                            <div className="glass-strong p-6 rounded-xl">
+                                <h2 className="text-2xl font-bold mb-6 text-on-surface">העלאות משתמשים</h2>
+                                {!uploads || uploads.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <span className="material-symbols-outlined text-6xl text-on-surface/30 mb-4">
+                                            upload_file
+                                        </span>
+                                        <p className="text-on-surface/60">אין העלאות עדיין</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {uploads.map(upload => (
+                                            <div key={upload.id} className="glass p-6 rounded-lg">
+                                                <div className="flex items-start gap-4">
+                                                    <span className="material-symbols-outlined text-5xl text-primary">
+                                                        description
+                                                    </span>
+                                                    <div className="flex-1">
+                                                        <div className="flex items-start justify-between mb-2">
+                                                            <div>
+                                                                <h3 className="text-xl font-bold text-on-surface mb-1">
+                                                                    {upload.bookName}
+                                                                </h3>
+                                                                <p className="text-sm text-on-surface/60">
+                                                                    הועלה על ידי: <span className="font-medium">{upload.uploadedBy}</span>
+                                                                </p>
+                                                            </div>
+                                                            <span className={`px-4 py-2 rounded-full text-sm font-bold ${
+                                                                upload.status === 'approved'
+                                                                    ? 'bg-green-100 text-green-800'
+                                                                    : upload.status === 'rejected'
+                                                                        ? 'bg-red-100 text-red-800'
+                                                                        : 'bg-yellow-100 text-yellow-800'
+                                                            }`}>
+                                                                {upload.status === 'approved' ? '✓ אושר' : upload.status === 'rejected' ? '✗ נדחה' : '⏳ ממתין'}
+                                                            </span>
+                                                        </div>
+                                                        
+                                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
+                                                            <div>
+                                                                <span className="text-on-surface/60">שם קובץ:</span>
+                                                                <p className="font-medium text-on-surface">{upload.originalFileName}</p>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-on-surface/60">גודל:</span>
+                                                                <p className="font-medium text-on-surface">
+                                                                    {(upload.fileSize / 1024).toFixed(2)} KB
+                                                                </p>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-on-surface/60">שורות:</span>
+                                                                <p className="font-medium text-on-surface">{upload.lineCount?.toLocaleString()}</p>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-on-surface/60">תאריך:</span>
+                                                                <p className="font-medium text-on-surface">
+                                                                    {new Date(upload.uploadedAt).toLocaleDateString('he-IL', {
+                                                                        day: 'numeric',
+                                                                        month: 'short',
+                                                                        year: 'numeric',
+                                                                        hour: '2-digit',
+                                                                        minute: '2-digit'
+                                                                    })}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex gap-3 flex-wrap">
+                                                            {upload.downloadUrl ? (
+                                                                <a
+                                                                    href={upload.downloadUrl}
+                                                                    download={upload.originalFileName}
+                                                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                                                                >
+                                                                    <span className="material-symbols-outlined">download</span>
+                                                                    <span>הורד קובץ</span>
+                                                                </a>
+                                                            ) : (
+                                                                <span className="text-sm text-red-600 px-4 py-2">
+                                                                    ⚠️ קובץ לא נמצא
+                                                                </span>
+                                                            )}
+                                                            {upload.fileUrl && (
+                                                                <a
+                                                                    href={upload.fileUrl}
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    className="flex items-center gap-2 px-4 py-2 glass rounded-lg hover:bg-surface-variant transition-colors"
+                                                                >
+                                                                    <span className="material-symbols-outlined">visibility</span>
+                                                                    <span>צפה בקובץ</span>
+                                                                </a>
+                                                            )}
+                                                            {upload.status === 'pending' && (
+                                                                <>
+                                                                    <button
+                                                                        onClick={() => handleUpdateUploadStatus(upload.id, 'approved')}
+                                                                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                                                    >
+                                                                        <span className="material-symbols-outlined">check_circle</span>
+                                                                        <span>אשר</span>
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleUpdateUploadStatus(upload.id, 'rejected')}
+                                                                        className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                                                                    >
+                                                                        <span className="material-symbols-outlined">cancel</span>
+                                                                        <span>דחה</span>
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
                         )}
 
