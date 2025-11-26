@@ -17,6 +17,7 @@ export default function EditPage() {
   const [pageData, setPageData] = useState(null)
   const [content, setContent] = useState('')
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
   const [twoColumns, setTwoColumns] = useState(false)
   const [leftColumn, setLeftColumn] = useState('')
@@ -38,6 +39,7 @@ export default function EditPage() {
   const loadPageData = async () => {
     try {
       setLoading(true)
+      setError(null)
       
       // טען נתוני ספר
       const bookResponse = await fetch(`/api/book-by-name?name=${encodeURIComponent(bookPath)}`)
@@ -47,6 +49,9 @@ export default function EditPage() {
         setBookData(bookResult.book)
         const page = bookResult.pages.find(p => p.number === pageNumber)
         setPageData(page)
+      } else {
+        setError(bookResult.error || 'שגיאה בטעינת הספר')
+        return
       }
       
       // טען תוכן שמור
@@ -62,7 +67,7 @@ export default function EditPage() {
       }
     } catch (err) {
       console.error('Error loading page:', err)
-      alert(`❌ שגיאה בטעינת העמוד: ${err.message}`)
+      setError(err.message || 'שגיאה בטעינת העמוד')
     } finally {
       setLoading(false)
     }
@@ -331,6 +336,27 @@ export default function EditPage() {
             progress_activity
           </span>
           <p className="text-on-surface/70">טוען עמוד...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="text-center glass-strong p-8 rounded-2xl max-w-md">
+          <span className="material-symbols-outlined text-6xl text-red-500 mb-4 block">
+            error
+          </span>
+          <h2 className="text-2xl font-bold text-on-surface mb-2">שגיאה</h2>
+          <p className="text-on-surface/70 mb-4">{error}</p>
+          <Link 
+            href={`/book/${encodeURIComponent(bookPath)}`}
+            className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-on-primary rounded-lg hover:bg-accent transition-colors"
+          >
+            <span className="material-symbols-outlined">arrow_forward</span>
+            <span>חזרה לספר</span>
+          </Link>
         </div>
       </div>
     )
