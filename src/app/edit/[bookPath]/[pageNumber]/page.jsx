@@ -27,6 +27,7 @@ export default function EditPage() {
   const [showFindReplace, setShowFindReplace] = useState(false)
   const [findText, setFindText] = useState('')
   const [replaceText, setReplaceText] = useState('')
+  const [isOcrProcessing, setIsOcrProcessing] = useState(false)
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -241,6 +242,78 @@ export default function EditPage() {
     }
   }
 
+  const handleOCR = async () => {
+    if (!thumbnailUrl) {
+      alert('❌ אין תמונה זמינה לעיבוד OCR')
+      return
+    }
+
+    setIsOcrProcessing(true)
+    
+    try {
+      // ייבוא Tesseract רק כשצריך
+      const Tesseract = (await import('tesseract.js')).default
+      
+      // הצג הודעת התקדמות
+      const progressDiv = document.createElement('div')
+      progressDiv.id = 'ocr-progress'
+      progressDiv.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-primary text-on-primary px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-3'
+      progressDiv.innerHTML = `
+        <span class="material-symbols-outlined animate-spin">progress_activity</span>
+        <span>מעבד OCR... <span id="ocr-percent">0%</span></span>
+      `
+      document.body.appendChild(progressDiv)
+
+      // הרץ OCR
+      const result = await Tesseract.recognize(
+        thumbnailUrl,
+        'heb', // עברית
+        {
+          logger: (m) => {
+            if (m.status === 'recognizing text') {
+              const percent = Math.round(m.progress * 100)
+              const percentEl = document.getElementById('ocr-percent')
+              if (percentEl) percentEl.textContent = `${percent}%`
+            }
+          }
+        }
+      )
+
+      // הסר הודעת התקדמות
+      progressDiv.remove()
+
+      const extractedText = result.data.text.trim()
+      
+      if (!extractedText) {
+        alert('⚠️ לא זוהה טקסט בתמונה')
+        return
+      }
+
+      // העתק את הטקסט לפאנל העריכה
+      if (twoColumns) {
+        // אם יש שני טורים, שים בטור הימני
+        setRightColumn(extractedText)
+        debouncedSave(content, leftColumn, extractedText, twoColumns)
+      } else {
+        // אם יש טור אחד
+        setContent(extractedText)
+        debouncedSave(extractedText, leftColumn, rightColumn, twoColumns)
+      }
+
+      alert(`✅ OCR הושלם בהצלחה!\nזוהו ${extractedText.length} תווים`)
+      
+    } catch (error) {
+      console.error('OCR Error:', error)
+      alert('❌ שגיאה בעיבוד OCR: ' + error.message)
+      
+      // הסר הודעת התקדמות במקרה של שגיאה
+      const progressDiv = document.getElementById('ocr-progress')
+      if (progressDiv) progressDiv.remove()
+    } finally {
+      setIsOcrProcessing(false)
+    }
+  }
+
   const insertTag = (tag) => {
     // זהה איזה textarea פעיל
     let currentText, column
@@ -422,6 +495,22 @@ export default function EditPage() {
               {/* Left Side - Image Tools */}
               <div className="flex items-center gap-3">
                 <span className="text-sm text-on-surface/60">עמוד {pageNumber} מתוך {bookData?.totalPages}</span>
+                
+                <div className="w-px h-6 bg-surface-variant"></div>
+                
+                <button
+                  onClick={handleOCR}
+                  disabled={isOcrProcessing || !thumbnailUrl}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-500 to-blue-500 text-white rounded-lg hover:from-purple-600 hover:to-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md hover:shadow-lg"
+                  title="זיהוי טקסט אוטומטי מהתמונה (OCR)"
+                >
+                  <span className="material-symbols-outlined text-lg">
+                    {isOcrProcessing ? 'progress_activity' : 'text_fields'}
+                  </span>
+                  <span className="text-sm font-bold">
+                    {isOcrProcessing ? 'מעבד...' : 'OCR'}
+                  </span>
+                </button>
                 
                 <div className="w-px h-6 bg-surface-variant"></div>
                 
