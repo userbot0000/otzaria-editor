@@ -1,0 +1,123 @@
+[
+  {
+    "id": "1764024411215",
+    "email": "yy581834yy@gmail.com",
+    "password": "$2b$12$LQOldkNHkpqKa2uG2xHh8OIiCbnp.4bxxDnwhXuSE8GJccCR18otO",
+    "name": "userbot",
+    "role": "admin",
+    "createdAt": "2025-11-24T22:46:51.215Z"
+  },
+  {
+    "id": "1764066451049",
+    "email": "admin@gmail.com",
+    "password": "$2b$12$lwn/pvr8I00gG.EXOZM2IeP22BPyXypvU0blIC5xXqlXzYdlaxqKS",
+    "name": "admin",
+    "role": "admin",
+    "createdAt": "2025-11-25T10:27:31.049Z",
+    "points": 20
+  },
+  {
+    "id": "1764174600148",
+    "email": "r0534.1330907@gmail.com",
+    "password": "$2b$12$vNgsiOSL.WMgraobsc50ReOwVzaTL.H6/sFUH6eJ6sA.FD8MK6ng.",
+    "name": "מענין לשמוע",
+    "role": "user",
+    "createdAt": "2025-11-26T16:30:00.148Z",
+    "points": 40
+  },
+  {
+    "id": "1764185583622",
+    "email": "benis3984@gmail.com",
+    "password": "$2b$12$uM6Cm7Qbpvxarm.kbyhXNebIC/Ecr3ic5ZhQ4X2KZJHTOhscXtZF2",
+    "name": "איש גמזו",
+    "role": "admin",
+    "createdAt": "2025-11-26T19:33:03.622Z",
+    "points": 10
+  },
+  {
+    "id": "1764193246962",
+    "email": "75252117Z@GMAIL.COM",
+    "password": "$2b$12$GnYGpmcIz7ZWfBfYakvAY.FdBOen6sK.YWVR.E0u6WYiA.pYR74VC",
+    "name": "אלכסון",
+    "role": "user",
+    "createdAt": "2025-11-26T21:40:46.962Z",
+    "points": 5
+  },
+  {
+    "id": "1764193675995",
+    "email": "2cuz56aztb@bwmyga.com",
+    "password": "$2b$12$tEmwLIz0L2iB7/cJKdytj.zCUXl9SCmo4AhGnmyJPKlUMNBkUgwkW",
+    "name": "QQQDD",
+    "role": "user",
+    "createdAt": "2025-11-26T21:47:55.995Z"
+  },
+  {
+    "id": "1764194101618",
+    "email": "q9411aa@gmail.com",
+    "password": "$2b$12$jd8m4AI3a.xlMlrsiT4UduimfwomK6yU4auLi8AU9iF2HhY09hN42",
+    "name": "צדיק וטוב לו",
+    "role": "user",
+    "createdAt": "2025-11-26T21:55:01.618Z"
+  },
+  {
+    "id": "1764194455775",
+    "email": "zzww63113@gmail.com",
+    "password": "$2b$12$ep.tfzgWT323Fh4MkWoBM.MRPAqIgLLuRHq.7BUzPLvQKYFs0Gjm6",
+    "name": "ישראל",
+    "role": "user",
+    "createdAt": "2025-11-26T22:00:55.775Z",
+    "points": 10
+  },
+  {
+    "id": "1764194563033",
+    "email": "7353755@GMAIL.COM",
+    "password": "$2b$12$F7GzbnzT74HlN0OwZYvQg.7W.CC6hpyMJ44yk1.bSC758.IC.5.cG",
+    "name": "י. פל.",
+    "role": "admin",
+    "createdAt": "2025-11-26T22:02:43.033Z",
+    "points": 0
+  },
+  {
+    "id": "1764195237968",
+    "email": "N0548438958@GMAIL.COM",
+    "password": "$2b$12$Ize1uYz9S7Y0o/ZN8.6QqewoO3NrhdQuEhbaCyROyrXwiD7GzasTG",
+    "name": "צורבא מרבנן",
+    "role": "user",
+    "createdAt": "2025-11-26T22:13:57.968Z"
+  },
+  {
+    "id": "1764196080498",
+    "email": "TSM156286@GMAIL.COM",
+    "password": "$2b$12$0nGguPnWGhL9SxwND52.0O1abQEiWCOcMUByGpTWW.n/vd9ajZT.a",
+    "name": "יאיר דניאל",
+    "role": "user",
+    "createdAt": "2025-11-26T22:28:00.498Z",
+    "points": 10
+  },
+  {
+    "id": "1764196674573",
+    "email": "rabbiniclaws@gmail.com",
+    "password": "$2b$12$5LSRMMxwdG2Ca8nYYIFXmu1Be.x9IyWBE/oR2fzvAlsMjggkxoWBS",
+    "name": "975",
+    "role": "user",
+    "createdAt": "2025-11-26T22:37:54.573Z"
+  },
+  {
+    "id": "1764198097380",
+    "email": "i0527199606@gmail.com",
+    "password": "$2b$12$6bWl6/Y7SV7T9fBQqUf5KuIL2XEwKgC7Ytk/XJGNS4ixqEDJhJttm",
+    "name": "איציק",
+    "role": "user",
+    "createdAt": "2025-11-26T23:01:37.380Z",
+    "points": 5
+  },
+  {
+    "id": "1764198764228",
+    "email": "jewishoffice@gmail.com",
+    "password": "$2b$12$2pWWzJG7l5seF4aHJ4eQzO.6zFQ7Ki/qp8SoUqG61N6fvrVNBMyeK",
+    "name": "אופי",
+    "role": "user",
+    "createdAt": "2025-11-26T23:12:44.228Z",
+    "points": 5
+  }
+]
