@@ -183,7 +183,11 @@ export default function BookPage() {
 
   const uploadPageText = async (pageNumber) => {
     try {
-      // טען את התוכן שנערך
+      // קרא את הקובץ השמור (הוא כבר קיים מהשמירה האוטומטית)
+      const bookName = bookPath.replace(/[^a-zA-Z0-9א-ת]/g, '_')
+      const fileName = `${bookName}_page_${pageNumber}.txt`
+      
+      // קרא את התוכן מה-API
       const contentResponse = await fetch(`/api/page-content?bookPath=${encodeURIComponent(bookPath)}&pageNumber=${pageNumber}`)
       const contentResult = await contentResponse.json()
       
@@ -195,6 +199,7 @@ export default function BookPage() {
       const data = contentResult.data
       let textContent = ''
       
+      // בנה את התוכן (בלי המפרידים של "טור ימין/שמאל")
       if (data.twoColumns) {
         textContent = data.rightColumn + '\n' + data.leftColumn
       } else {
@@ -206,9 +211,9 @@ export default function BookPage() {
         return
       }
 
-      // צור קובץ טקסט
+      // צור קובץ טקסט להעלאה
       const blob = new Blob([textContent], { type: 'text/plain' })
-      const file = new File([blob], `${bookPath}_עמוד_${pageNumber}.txt`, { type: 'text/plain' })
+      const file = new File([blob], fileName, { type: 'text/plain' })
 
       // העלה את הקובץ
       const formData = new FormData()
