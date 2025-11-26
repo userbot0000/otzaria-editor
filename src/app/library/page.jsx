@@ -168,11 +168,18 @@ export default function LibraryPage() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
-          {/* Top Container - Header + Search | Chart */}
+          {/* Top Container - Header + Description + Search | Chart */}
           <div className="grid lg:grid-cols-2 gap-6 mb-8">
-            {/* Left Side - Header + Search */}
-            <div>
-              <h1 className="text-4xl font-bold mb-6 text-on-surface" style={{ fontFamily: 'FrankRuehl, serif' }}>ספריית אוצריא</h1>
+            {/* Left Side - Header + Description + Search */}
+            <div className="flex flex-col justify-between">
+              <div>
+                <h1 className="text-4xl font-bold mb-4 text-on-surface" style={{ fontFamily: 'FrankRuehl, serif' }}>ספריית אוצריא</h1>
+                
+                <p className="text-on-surface/70 leading-relaxed mb-6">
+                  ספרייה זו כוללת ספרים מאתר <span className="font-bold">hebrewbooks</span> שמיועדים להוספה למאגר אוצריא. 
+                  יחד נגדיל את מאגר הטקסט התורני הגדול בעולם!
+                </p>
+              </div>
               
               <div className="relative">
                 <input
