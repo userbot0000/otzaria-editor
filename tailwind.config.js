@@ -20,7 +20,7 @@ export default {
       },
       fontFamily: {
         sans: ['system-ui', '-apple-system', 'sans-serif'],
-        hebrew: ['Arial', 'Tahoma', 'sans-serif'],
+        hebrew: ['Segoe UI', 'Tahoma', 'Arial', 'sans-serif'],
       },
     },
   },
