@@ -644,10 +644,8 @@ export default function EditPage() {
                 </div>
               </div>
             </div>
-
           </div>
         </div>
-      </div>
 
       {/* Find & Replace Dialog */}
       {showFindReplace && (
@@ -790,3 +788,4 @@ export default function EditPage() {
     </div>
   )
 }
+
