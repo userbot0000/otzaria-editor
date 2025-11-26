@@ -26,23 +26,40 @@ export async function loadLibraryStructure() {
     return cachedStructure
   }
   try {
-    logger.log('🚀 Loading library structure...')
-    logger.log('   USE_BLOB:', USE_BLOB)
-    logger.log('   VERCEL_ENV:', process.env.VERCEL_ENV)
-    logger.log('   USE_BLOB_STORAGE:', process.env.USE_BLOB_STORAGE)
+    logger.log('🚀 Loading library structure from MongoDB...')
     
-    let structure
-    if (USE_BLOB) {
-      logger.log('   📦 Using Blob Storage')
-      structure = await scanBlobThumbnails()
-    } else {
-      logger.log('   📁 Using local filesystem')
-      if (!fs.existsSync(THUMBNAILS_PATH)) {
-        logger.warn('Thumbnails directory does not exist:', THUMBNAILS_PATH)
-        return []
+    // קרא את books.json מ-MongoDB
+    const { readJSON } = await import('./storage.js')
+    const booksData = await readJSON('data/books.json')
+    
+    if (!booksData || booksData.length === 0) {
+      logger.warn('⚠️  No books found in MongoDB')
+      
+      // נסה לסרוק מהתיקייה המקומית
+      if (!USE_BLOB && fs.existsSync(THUMBNAILS_PATH)) {
+        logger.log('📁 Falling back to local filesystem')
+        const structure = scanThumbnailsDirectory()
+        cachedStructure = structure
+        cacheTime = now
+        return structure
       }
-      structure = scanThumbnailsDirectory()
+      
+      return []
     }
+    
+    logger.log(`📚 Found ${booksData.length} books in MongoDB`)
+    
+    // המר לפורמט הנכון
+    const structure = booksData.map(book => ({
+      id: book.id || book.name,
+      name: book.name,
+      type: 'file',
+      status: 'available',
+      lastEdit: book.updatedAt || book.createdAt,
+      editor: null,
+      path: book.name,
+      pageCount: book.totalPages || 0,
+    }))
 
     // שמור ב-cache
     cachedStructure = structure
