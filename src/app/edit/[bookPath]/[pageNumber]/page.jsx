@@ -412,59 +412,25 @@ export default function EditPage() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden p-6 gap-4">
-        {/* Image Panel */}
-        <div className="w-1/2 flex flex-col">
-          <div className="glass-strong rounded-xl overflow-hidden border border-surface-variant flex-1 flex flex-col">
-            <div className="bg-primary/10 px-4 py-3 border-b border-surface-variant">
-              <div className="flex items-center justify-between">
-                <h2 className="font-bold text-on-surface flex items-center gap-2">
-                  <span className="material-symbols-outlined">image</span>
-                  <span>תמונת העמוד</span>
-                </h2>
+      {/* Main Content - Single Container */}
+      <div className="flex-1 flex flex-col overflow-hidden p-6">
+        <div className="glass-strong rounded-xl border border-surface-variant flex-1 flex flex-col overflow-hidden">
+          
+          {/* Unified Toolbar */}
+          <div className="bg-primary/10 px-4 py-3 border-b border-surface-variant">
+            <div className="flex items-center justify-between gap-4">
+              {/* Left Side - Image Tools */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary">image</span>
+                  <span className="font-bold text-on-surface">תמונת העמוד</span>
+                </div>
+                <div className="w-px h-6 bg-surface-variant"></div>
                 <span className="text-sm text-on-surface/60">עמוד {pageNumber} מתוך {bookData?.totalPages}</span>
               </div>
-            </div>
-            
-            <div className="flex-1 overflow-auto p-4 bg-white">
-              {thumbnailUrl ? (
-                <img 
-                  src={thumbnailUrl} 
-                  alt={`עמוד ${pageNumber}`}
-                  className="w-full h-auto rounded-lg shadow-lg"
-                  onError={(e) => {
-                    console.error('Failed to load image:', thumbnailUrl)
-                    e.target.style.display = 'none'
-                    e.target.nextSibling.style.display = 'flex'
-                  }}
-                />
-              ) : null}
-              <div 
-                className="flex items-center justify-center min-h-full bg-surface rounded-lg"
-                style={{ display: thumbnailUrl ? 'none' : 'flex' }}
-              >
-                <div className="text-center">
-                  <span className="material-symbols-outlined text-9xl text-on-surface/20 block mb-4">
-                    description
-                  </span>
-                  <p className="text-on-surface/60">אין תמונה זמינה</p>
-                  <p className="text-xs text-on-surface/40 mt-2">(עמוד {pageNumber})</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
 
-        {/* Text Editor Panel */}
-        <div className="w-1/2 flex flex-col">
-          <div className="glass-strong rounded-xl border border-surface-variant flex-1 flex flex-col overflow-hidden">
-            <div className="bg-primary/10 px-4 py-3 border-b border-surface-variant">
-              <div className="flex items-center justify-between">
-                <h2 className="font-bold text-on-surface flex items-center gap-2">
-                  <span className="material-symbols-outlined">edit_note</span>
-                  <span>עריכת טקסט</span>
-                </h2>
+              {/* Right Side - Text Tools */}
+              <div className="flex items-center gap-3">
                 <button
                   onClick={toggleColumns}
                   className="flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-surface-variant rounded-lg hover:border-primary transition-colors text-sm"
@@ -476,9 +442,10 @@ export default function EditPage() {
                 </button>
               </div>
             </div>
+          </div>
 
-              {/* Toolbar */}
-              <div className="px-4 py-2 border-b border-surface-variant bg-surface/30 flex items-center justify-center gap-2 flex-wrap">
+          {/* Text Formatting Toolbar */}
+          <div className="px-4 py-2 border-b border-surface-variant bg-surface/30 flex items-center justify-center gap-2 flex-wrap">
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => insertTag('b')}
@@ -575,9 +542,40 @@ export default function EditPage() {
                   <option value="Georgia">Georgia</option>
                   <option value="Verdana">Verdana</option>
                 </select>
+          </div>
+
+          {/* Split Content Area */}
+          <div className="flex-1 flex overflow-hidden">
+            {/* Image Side */}
+            <div className="w-1/2 overflow-auto p-4 bg-white border-l border-surface-variant">
+              {thumbnailUrl ? (
+                <img 
+                  src={thumbnailUrl} 
+                  alt={`עמוד ${pageNumber}`}
+                  className="w-full h-auto rounded-lg shadow-lg"
+                  onError={(e) => {
+                    console.error('Failed to load image:', thumbnailUrl)
+                    e.target.style.display = 'none'
+                    e.target.nextSibling.style.display = 'flex'
+                  }}
+                />
+              ) : null}
+              <div 
+                className="flex items-center justify-center min-h-full bg-surface rounded-lg"
+                style={{ display: thumbnailUrl ? 'none' : 'flex' }}
+              >
+                <div className="text-center">
+                  <span className="material-symbols-outlined text-9xl text-on-surface/20 block mb-4">
+                    description
+                  </span>
+                  <p className="text-on-surface/60">אין תמונה זמינה</p>
+                  <p className="text-xs text-on-surface/40 mt-2">(עמוד {pageNumber})</p>
+                </div>
               </div>
-              
-              <div className="flex-1 p-4 overflow-auto editor-container">
+            </div>
+
+            {/* Text Editor Side */}
+            <div className="w-1/2 flex flex-col overflow-hidden p-4 editor-container">
                 {twoColumns ? (
                   <div className="grid grid-cols-2 gap-4 h-full">
                     <div className="flex flex-col h-full">
@@ -619,33 +617,33 @@ export default function EditPage() {
                   />
                 )}
               </div>
+            </div>
 
-              {/* Stats */}
-              <div className="px-4 py-3 border-t border-surface-variant bg-surface/50">
-                <div className="flex items-center justify-between text-sm text-on-surface/60">
-                  <div className="flex items-center gap-4">
-                    {twoColumns ? (
-                      <>
-                        <span>ימין: {rightColumn.length} תווים</span>
-                        <span>שמאל: {leftColumn.length} תווים</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>תווים: {content.length}</span>
-                        <span>מילים: {content.trim() ? content.trim().split(/\s+/).length : 0}</span>
-                        <span>שורות: {content.split('\n').length}</span>
-                      </>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 text-green-600">
-                    <span className="material-symbols-outlined text-sm">check_circle</span>
-                    <span>נשמר אוטומטית</span>
-                  </div>
-                </div>
+          {/* Stats Bar */}
+          <div className="px-4 py-3 border-t border-surface-variant bg-surface/50">
+            <div className="flex items-center justify-between text-sm text-on-surface/60">
+              <div className="flex items-center gap-4">
+                {twoColumns ? (
+                  <>
+                    <span>ימין: {rightColumn.length} תווים</span>
+                    <span>שמאל: {leftColumn.length} תווים</span>
+                  </>
+                ) : (
+                  <>
+                    <span>תווים: {content.length}</span>
+                    <span>מילים: {content.trim() ? content.trim().split(/\s+/).length : 0}</span>
+                    <span>שורות: {content.split('\n').length}</span>
+                  </>
+                )}
+              </div>
+              <div className="flex items-center gap-2 text-green-600">
+                <span className="material-symbols-outlined text-sm">check_circle</span>
+                <span>נשמר אוטומטית</span>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
       {/* Find & Replace Dialog */}
       {showFindReplace && (
