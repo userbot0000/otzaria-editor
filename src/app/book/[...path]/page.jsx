@@ -53,9 +53,9 @@ export default function BookPage() {
   const loadBookData = async () => {
     try {
       setLoading(true)
-      // שימוש ב-query parameter במקום path parameter
+      // שימוש ב-path parameter
       console.log('📤 Loading book:', bookPath)
-      const response = await fetch(`/api/book-by-name?name=${encodeURIComponent(bookPath)}`)
+      const response = await fetch(`/api/book/${encodeURIComponent(bookPath)}`)
       const result = await response.json()
       
       if (result.success) {

@@ -40,13 +40,27 @@ export default function EditPage() {
       setLoading(true)
       
       // טען נתוני ספר
+      console.log('📤 Loading book data for edit page:', bookPath)
       const bookResponse = await fetch(`/api/book/${encodeURIComponent(bookPath)}`)
+      console.log('📥 Book response status:', bookResponse.status)
+      
+      if (!bookResponse.ok) {
+        const errorText = await bookResponse.text()
+        console.error('❌ Failed to load book:', errorText)
+        throw new Error(`Failed to load book: ${bookResponse.status}`)
+      }
+      
       const bookResult = await bookResponse.json()
+      console.log('📚 Book result:', bookResult)
       
       if (bookResult.success) {
         setBookData(bookResult.book)
         const page = bookResult.pages.find(p => p.number === pageNumber)
         setPageData(page)
+        console.log('✅ Page data loaded:', page)
+      } else {
+        console.error('❌ Book result not successful:', bookResult)
+        throw new Error(bookResult.error || 'Failed to load book')
       }
       
       // טען תוכן שמור
@@ -62,6 +76,7 @@ export default function EditPage() {
       }
     } catch (err) {
       console.error('Error loading page:', err)
+      alert(`❌ שגיאה בטעינת העמוד: ${err.message}`)
     } finally {
       setLoading(false)
     }
