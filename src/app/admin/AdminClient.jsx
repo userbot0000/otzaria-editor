@@ -20,6 +20,9 @@ export default function AdminClient({ session }) {
     const [pages, setPages] = useState([])
     const [pagesFilter, setPagesFilter] = useState({ status: '', book: '', userId: '' })
     const [editingPage, setEditingPage] = useState(null)
+    const [messages, setMessages] = useState([])
+    const [selectedMessage, setSelectedMessage] = useState(null)
+    const [replyText, setReplyText] = useState('')
 
     useEffect(() => {
         loadData()
@@ -28,6 +31,8 @@ export default function AdminClient({ session }) {
     useEffect(() => {
         if (activeTab === 'pages') {
             loadPages()
+        } else if (activeTab === 'messages') {
+            loadMessages()
         }
     }, [activeTab, pagesFilter])
 
@@ -69,6 +74,89 @@ export default function AdminClient({ session }) {
             }
         } catch (error) {
             console.error('Error loading pages:', error)
+        }
+    }
+
+    const loadMessages = async () => {
+        try {
+            const response = await fetch('/api/messages/list')
+            const data = await response.json()
+
+            if (data.success) {
+                setMessages(data.messages)
+            }
+        } catch (error) {
+            console.error('Error loading messages:', error)
+        }
+    }
+
+    const handleReplyToMessage = async (messageId) => {
+        if (!replyText.trim()) {
+            alert('נא להזין תגובה')
+            return
+        }
+
+        try {
+            const response = await fetch('/api/messages/reply', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messageId, reply: replyText })
+            })
+
+            const result = await response.json()
+            if (result.success) {
+                alert('התגובה נשלחה בהצלחה!')
+                setReplyText('')
+                loadMessages()
+                setSelectedMessage(null)
+            } else {
+                alert(result.error || 'שגיאה בשליחת תגובה')
+            }
+        } catch (error) {
+            console.error('Error replying to message:', error)
+            alert('שגיאה בשליחת תגובה')
+        }
+    }
+
+    const handleMarkAsRead = async (messageId) => {
+        try {
+            const response = await fetch('/api/messages/mark-read', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messageId })
+            })
+
+            const result = await response.json()
+            if (result.success) {
+                loadMessages()
+            }
+        } catch (error) {
+            console.error('Error marking message as read:', error)
+        }
+    }
+
+    const handleDeleteMessage = async (messageId) => {
+        if (!confirm('האם אתה בטוח שברצונך למחוק את ההודעה?')) {
+            return
+        }
+
+        try {
+            const response = await fetch('/api/messages/delete', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messageId })
+            })
+
+            const result = await response.json()
+            if (result.success) {
+                alert('ההודעה נמחקה בהצלחה')
+                loadMessages()
+            } else {
+                alert(result.error || 'שגיאה במחיקת הודעה')
+            }
+        } catch (error) {
+            console.error('Error deleting message:', error)
+            alert('שגיאה במחיקת הודעה')
         }
     }
 
@@ -421,6 +509,18 @@ export default function AdminClient({ session }) {
                                 <span className="flex items-center gap-2">
                                     <span className="material-symbols-outlined">analytics</span>
                                     סטטיסטיקות
+                                </span>
+                            </button>
+                            <button
+                                onClick={() => setActiveTab('messages')}
+                                className={`px-6 py-3 rounded-lg font-medium transition-all ${activeTab === 'messages'
+                                    ? 'bg-primary text-on-primary'
+                                    : 'glass text-on-surface hover:bg-surface-variant'
+                                    }`}
+                            >
+                                <span className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined">mail</span>
+                                    הודעות ({messages.filter(m => m.status === 'unread').length})
                                 </span>
                             </button>
                         </div>
@@ -856,6 +956,134 @@ export default function AdminClient({ session }) {
                                             description
                                         </span>
                                         <p className="text-on-surface/60">אין עמודים להצגה</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === 'messages' && (
+                            <div className="glass-strong p-6 rounded-xl">
+                                <h2 className="text-2xl font-bold mb-6 text-on-surface">הודעות משתמשים</h2>
+                                {messages.length === 0 ? (
+                                    <div className="text-center py-12">
+                                        <span className="material-symbols-outlined text-6xl text-on-surface/30 mb-4">
+                                            mail
+                                        </span>
+                                        <p className="text-on-surface/60">אין הודעות עדיין</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {messages.map(message => (
+                                            <div key={message.id} className={`glass p-6 rounded-lg ${message.status === 'unread' ? 'border-2 border-primary' : ''}`}>
+                                                <div className="flex items-start justify-between mb-4">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center gap-3 mb-2">
+                                                            <h3 className="text-xl font-bold text-on-surface">{message.subject}</h3>
+                                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                                                                message.status === 'unread' 
+                                                                    ? 'bg-blue-100 text-blue-800'
+                                                                    : message.status === 'replied'
+                                                                        ? 'bg-green-100 text-green-800'
+                                                                        : 'bg-gray-100 text-gray-800'
+                                                            }`}>
+                                                                {message.status === 'unread' ? 'חדש' : message.status === 'replied' ? 'נענה' : 'נקרא'}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-sm text-on-surface/60 mb-3">
+                                                            מאת: <span className="font-medium">{message.senderName}</span> ({message.senderEmail})
+                                                            <span className="mx-2">•</span>
+                                                            {new Date(message.createdAt).toLocaleDateString('he-IL', {
+                                                                day: 'numeric',
+                                                                month: 'short',
+                                                                year: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit'
+                                                            })}
+                                                        </p>
+                                                        <p className="text-on-surface whitespace-pre-wrap">{message.message}</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Replies */}
+                                                {message.replies && message.replies.length > 0 && (
+                                                    <div className="mt-4 mr-8 space-y-3">
+                                                        <h4 className="font-bold text-on-surface">תגובות:</h4>
+                                                        {message.replies.map((reply, idx) => (
+                                                            <div key={idx} className="bg-surface p-4 rounded-lg">
+                                                                <p className="text-sm text-on-surface/60 mb-2">
+                                                                    <span className="font-medium">{reply.senderName}</span>
+                                                                    <span className="mx-2">•</span>
+                                                                    {new Date(reply.createdAt).toLocaleDateString('he-IL', {
+                                                                        day: 'numeric',
+                                                                        month: 'short',
+                                                                        hour: '2-digit',
+                                                                        minute: '2-digit'
+                                                                    })}
+                                                                </p>
+                                                                <p className="text-on-surface whitespace-pre-wrap">{reply.message}</p>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {/* Reply Form */}
+                                                {selectedMessage === message.id ? (
+                                                    <div className="mt-4 mr-8">
+                                                        <textarea
+                                                            value={replyText}
+                                                            onChange={(e) => setReplyText(e.target.value)}
+                                                            placeholder="כתוב תגובה..."
+                                                            className="w-full px-4 py-3 border border-surface-variant rounded-lg focus:outline-none focus:border-primary bg-white text-on-surface mb-3"
+                                                            rows="4"
+                                                        />
+                                                        <div className="flex gap-3">
+                                                            <button
+                                                                onClick={() => handleReplyToMessage(message.id)}
+                                                                className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg hover:bg-accent transition-colors"
+                                                            >
+                                                                <span className="material-symbols-outlined">send</span>
+                                                                <span>שלח תגובה</span>
+                                                            </button>
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedMessage(null)
+                                                                    setReplyText('')
+                                                                }}
+                                                                className="px-4 py-2 glass rounded-lg hover:bg-surface-variant transition-colors"
+                                                            >
+                                                                ביטול
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex gap-3 mt-4">
+                                                        <button
+                                                            onClick={() => setSelectedMessage(message.id)}
+                                                            className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg hover:bg-accent transition-colors"
+                                                        >
+                                                            <span className="material-symbols-outlined">reply</span>
+                                                            <span>השב</span>
+                                                        </button>
+                                                        {message.status === 'unread' && (
+                                                            <button
+                                                                onClick={() => handleMarkAsRead(message.id)}
+                                                                className="flex items-center gap-2 px-4 py-2 glass rounded-lg hover:bg-surface-variant transition-colors"
+                                                            >
+                                                                <span className="material-symbols-outlined">mark_email_read</span>
+                                                                <span>סמן כנקרא</span>
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleDeleteMessage(message.id)}
+                                                            className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                                                        >
+                                                            <span className="material-symbols-outlined">delete</span>
+                                                            <span>מחק</span>
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
                                     </div>
                                 )}
                             </div>

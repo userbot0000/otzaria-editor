@@ -4,9 +4,33 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useSession, signOut } from 'next-auth/react'
 import { getAvatarColor, getInitial } from '@/lib/avatar-colors'
+import { useState, useEffect } from 'react'
 
 export default function Header() {
   const { data: session } = useSession()
+  const [unreadMessages, setUnreadMessages] = useState(0)
+
+  useEffect(() => {
+    if (session?.user?.role === 'admin') {
+      loadUnreadCount()
+      // רענן כל 30 שניות
+      const interval = setInterval(loadUnreadCount, 30000)
+      return () => clearInterval(interval)
+    }
+  }, [session])
+
+  const loadUnreadCount = async () => {
+    try {
+      const response = await fetch('/api/messages/list')
+      const result = await response.json()
+      if (result.success) {
+        const unread = result.messages.filter(m => m.status === 'unread').length
+        setUnreadMessages(unread)
+      }
+    } catch (error) {
+      console.error('Error loading unread messages:', error)
+    }
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full glass-strong">
@@ -30,9 +54,14 @@ export default function Header() {
           {session ? (
             <div className="flex items-center gap-4">
               {session.user.role === 'admin' && (
-                <Link href="/admin" className="flex items-center gap-2 text-accent hover:text-accent/80 transition-colors">
+                <Link href="/admin" className="flex items-center gap-2 text-accent hover:text-accent/80 transition-colors relative">
                   <span className="material-symbols-outlined">admin_panel_settings</span>
                   <span>ניהול</span>
+                  {unreadMessages > 0 && (
+                    <span className="absolute -top-2 -left-2 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      {unreadMessages}
+                    </span>
+                  )}
                 </Link>
               )}
               <Link 
