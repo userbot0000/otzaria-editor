@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { statusConfig } from '@/lib/library-data'
 import Header from '@/components/Header'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 export default function LibraryPage() {
   const { data: session, status } = useSession()
@@ -196,6 +197,49 @@ export default function LibraryPage() {
             </div>
           </div>
 
+          {/* Stats and Chart Section */}
+          <div className="grid lg:grid-cols-3 gap-6 mb-8">
+            {/* Stats Cards */}
+            <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-green-700 mb-1">הושלמו</p>
+                  <p className="text-3xl font-bold text-green-800">{stats.completed}</p>
+                </div>
+                <div className="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center">
+                  <span className="material-symbols-outlined text-2xl text-green-700">check_circle</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-6 border-2 border-blue-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-blue-700 mb-1">בטיפול</p>
+                  <p className="text-3xl font-bold text-blue-800">{stats['in-progress']}</p>
+                </div>
+                <div className="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center">
+                  <span className="material-symbols-outlined text-2xl text-blue-700">edit</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-6 border-2 border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-700 mb-1">זמינים</p>
+                  <p className="text-3xl font-bold text-gray-800">{stats.available}</p>
+                </div>
+                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center">
+                  <span className="material-symbols-outlined text-2xl text-gray-700">description</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress Chart */}
+          <WeeklyProgressChart />
+
           {/* Filter Tabs */}
           <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
             <button
@@ -247,6 +291,100 @@ export default function LibraryPage() {
       {/* File Details Modal */}
       {selectedFile && (
         <FileDetailsModal file={selectedFile} onClose={() => setSelectedFile(null)} />
+      )}
+    </div>
+  )
+}
+
+// Weekly Progress Chart Component
+function WeeklyProgressChart() {
+  const [chartData, setChartData] = useState([])
+  const [totalPages, setTotalPages] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadWeeklyProgress() {
+      try {
+        const response = await fetch('/api/stats/weekly-progress')
+        const result = await response.json()
+        
+        if (result.success) {
+          setChartData(result.data)
+          setTotalPages(result.total)
+        }
+      } catch (error) {
+        console.error('Error loading weekly progress:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    
+    loadWeeklyProgress()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="bg-surface rounded-xl p-6 border border-surface-variant mb-8 flex items-center justify-center h-[350px]">
+        <span className="material-symbols-outlined animate-spin text-4xl text-primary">
+          progress_activity
+        </span>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-surface rounded-xl p-6 border border-surface-variant mb-8">
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-on-surface mb-1">התקדמות שבועית</h2>
+          <p className="text-sm text-on-surface/60">עמודים שהושלמו בשבוע האחרון</p>
+        </div>
+        <div className="text-left">
+          <p className="text-sm text-on-surface/60">סה"כ השבוע</p>
+          <p className="text-3xl font-bold text-primary">{totalPages}</p>
+        </div>
+      </div>
+      
+      {chartData.length > 0 ? (
+        <ResponsiveContainer width="100%" height={250}>
+          <LineChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#e7e0d8" />
+            <XAxis 
+              dataKey="day" 
+              stroke="#6b5d4f"
+              style={{ fontSize: '14px', fontWeight: 'bold' }}
+            />
+            <YAxis 
+              stroke="#6b5d4f"
+              style={{ fontSize: '12px' }}
+            />
+            <Tooltip 
+              contentStyle={{ 
+                backgroundColor: '#fefbf6', 
+                border: '2px solid #6b5d4f',
+                borderRadius: '8px',
+                direction: 'rtl'
+              }}
+              labelStyle={{ fontWeight: 'bold', color: '#1c1b1a' }}
+              formatter={(value) => [`${value} עמודים`, 'הושלמו']}
+            />
+            <Line 
+              type="monotone" 
+              dataKey="pages" 
+              stroke="#6b5d4f" 
+              strokeWidth={3}
+              dot={{ fill: '#6b5d4f', r: 5 }}
+              activeDot={{ r: 7 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      ) : (
+        <div className="text-center py-12 text-on-surface/60">
+          <span className="material-symbols-outlined text-5xl mb-2 block">
+            show_chart
+          </span>
+          <p>אין נתונים להצגה</p>
+        </div>
       )}
     </div>
   )
