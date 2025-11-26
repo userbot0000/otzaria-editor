@@ -1,11 +1,29 @@
 import { list } from '@vercel/blob'
 import { MongoClient } from 'mongodb'
 import dotenv from 'dotenv'
+import https from 'https'
 
 dotenv.config({ path: '.env.local' })
 
 const uri = process.env.DATABASE_URL
 const client = new MongoClient(uri)
+
+// פונקציה להורדת קובץ מ-Vercel Blob
+async function downloadBlob(url) {
+  return new Promise((resolve, reject) => {
+    https.get(url, (response) => {
+      if (response.statusCode !== 200) {
+        reject(new Error(`HTTP ${response.statusCode}`))
+        return
+      }
+      
+      const chunks = []
+      response.on('data', (chunk) => chunks.push(chunk))
+      response.on('end', () => resolve(Buffer.concat(chunks)))
+      response.on('error', reject)
+    }).on('error', reject)
+  })
+}
 
 async function migrateToMongoDB() {
   try {
@@ -32,31 +50,24 @@ async function migrateToMongoDB() {
       try {
         console.log(`\n📥 Processing: ${blob.pathname}`)
         
-        // הורד את הקובץ עם authorization
-        const response = await fetch(blob.url, {
-          headers: {
-            'Authorization': `Bearer ${process.env.BLOB_READ_WRITE_TOKEN}`
-          }
-        })
+        // הורד את הקובץ
+        const buffer = await downloadBlob(blob.url)
+        console.log(`  📦 Downloaded: ${buffer.length} bytes`)
         
-        if (!response.ok) {
-          throw new Error(`Failed to download: ${response.status} ${response.statusText}`)
-        }
-        
-        const contentType = response.headers.get('content-type')
         let data
+        const contentType = blob.contentType || 'application/octet-stream'
         
         // בדוק אם זה JSON או תמונה
-        if (contentType?.includes('application/json')) {
-          data = await response.json()
-          console.log(`  📝 JSON file, size: ${JSON.stringify(data).length} bytes`)
-        } else if (contentType?.includes('image')) {
-          const buffer = await response.arrayBuffer()
-          data = Buffer.from(buffer).toString('base64')
-          console.log(`  🖼️  Image file, size: ${data.length} bytes`)
+        if (contentType.includes('application/json') || blob.pathname.endsWith('.json')) {
+          const text = buffer.toString('utf-8')
+          data = JSON.parse(text)
+          console.log(`  📝 JSON file`)
+        } else if (contentType.includes('image')) {
+          data = buffer.toString('base64')
+          console.log(`  🖼️  Image file`)
         } else {
-          data = await response.text()
-          console.log(`  📄 Text file, size: ${data.length} bytes`)
+          data = buffer.toString('utf-8')
+          console.log(`  📄 Text file`)
         }
         
         // שמור ב-MongoDB
