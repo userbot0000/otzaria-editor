@@ -430,22 +430,14 @@ export default function EditPage() {
               </div>
 
               {/* Right Side - Text Tools */}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={toggleColumns}
-                  className="flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-surface-variant rounded-lg hover:border-primary transition-colors text-sm"
-                >
-                  <span className="material-symbols-outlined text-lg">
-                    {twoColumns ? 'view_column' : 'view_agenda'}
-                  </span>
-                  <span>{twoColumns ? 'שני טורים' : 'טור אחד'}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Text Formatting Toolbar */}
-          <div className="px-4 py-2 border-b border-surface-variant bg-surface/30 flex items-center justify-center gap-2 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <span className="material-symbols-outlined text-primary">edit_note</span>
+                  <span className="font-bold text-on-surface">עריכת טקסט</span>
+                </div>
+                <div className="w-px h-6 bg-surface-variant"></div>
+                
+                {/* Text Formatting Buttons */}
                 <div className="flex items-center gap-1">
                   <button
                     onClick={() => insertTag('b')}
@@ -523,7 +515,7 @@ export default function EditPage() {
                   title="חיפוש והחלפה"
                 >
                   <span className="material-symbols-outlined text-lg">find_replace</span>
-                  <span className="text-sm">חיפוש והחלפה</span>
+                  <span className="text-sm">חיפוש</span>
                 </button>
 
                 <div className="w-px h-6 bg-surface-variant"></div>
@@ -531,9 +523,7 @@ export default function EditPage() {
                 <select
                   value={selectedFont}
                   className="px-3 py-1.5 bg-white border-2 border-surface-variant rounded-lg text-sm focus:outline-none focus:border-primary"
-                  onChange={(e) => {
-                    setSelectedFont(e.target.value)
-                  }}
+                  onChange={(e) => setSelectedFont(e.target.value)}
                 >
                   <option value="monospace">Monospace</option>
                   <option value="Arial">Arial</option>
@@ -542,7 +532,22 @@ export default function EditPage() {
                   <option value="Georgia">Georgia</option>
                   <option value="Verdana">Verdana</option>
                 </select>
+
+                <div className="w-px h-6 bg-surface-variant"></div>
+
+                <button
+                  onClick={toggleColumns}
+                  className="p-2 bg-white border-2 border-surface-variant rounded-lg hover:border-primary transition-colors"
+                  title={twoColumns ? 'שני טורים' : 'טור אחד'}
+                >
+                  <span className="material-symbols-outlined text-lg">
+                    {twoColumns ? 'view_column' : 'view_agenda'}
+                  </span>
+                </button>
+              </div>
+            </div>
           </div>
+
 
           {/* Split Content Area */}
           <div className="flex-1 flex overflow-hidden">
@@ -578,32 +583,26 @@ export default function EditPage() {
             <div className="w-1/2 flex flex-col overflow-hidden p-4 editor-container">
                 {twoColumns ? (
                   <div className="grid grid-cols-2 gap-4 h-full">
-                    <div className="flex flex-col h-full">
-                      <label className="text-sm font-bold text-on-surface mb-2">טור ימין</label>
-                      <textarea
-                        data-column="right"
-                        value={rightColumn}
-                        onChange={(e) => handleColumnChange('right', e.target.value)}
-                        onFocus={() => setActiveTextarea('right')}
-                        placeholder="טקסט הטור הימני..."
-                        style={{ fontFamily: selectedFont }}
-                        className="flex-1 p-4 bg-white border-2 border-surface-variant rounded-lg resize-none focus:outline-none focus:border-primary transition-colors text-lg leading-relaxed"
-                        dir="rtl"
-                      />
-                    </div>
-                    <div className="flex flex-col h-full">
-                      <label className="text-sm font-bold text-on-surface mb-2">טור שמאל</label>
-                      <textarea
-                        data-column="left"
-                        value={leftColumn}
-                        onChange={(e) => handleColumnChange('left', e.target.value)}
-                        onFocus={() => setActiveTextarea('left')}
-                        placeholder="טקסט הטור השמאלי..."
-                        style={{ fontFamily: selectedFont }}
-                        className="flex-1 p-4 bg-white border-2 border-surface-variant rounded-lg resize-none focus:outline-none focus:border-primary transition-colors text-lg leading-relaxed"
-                        dir="rtl"
-                      />
-                    </div>
+                    <textarea
+                      data-column="right"
+                      value={rightColumn}
+                      onChange={(e) => handleColumnChange('right', e.target.value)}
+                      onFocus={() => setActiveTextarea('right')}
+                      placeholder="טקסט הטור הימני..."
+                      style={{ fontFamily: selectedFont }}
+                      className="p-4 bg-white border-2 border-surface-variant rounded-lg resize-none focus:outline-none focus:border-primary transition-colors text-lg leading-relaxed"
+                      dir="rtl"
+                    />
+                    <textarea
+                      data-column="left"
+                      value={leftColumn}
+                      onChange={(e) => handleColumnChange('left', e.target.value)}
+                      onFocus={() => setActiveTextarea('left')}
+                      placeholder="טקסט הטור השמאלי..."
+                      style={{ fontFamily: selectedFont }}
+                      className="p-4 bg-white border-2 border-surface-variant rounded-lg resize-none focus:outline-none focus:border-primary transition-colors text-lg leading-relaxed"
+                      dir="rtl"
+                    />
                   </div>
                 ) : (
                   <textarea
