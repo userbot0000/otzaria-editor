@@ -167,27 +167,23 @@ export default function LibraryPage() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
-          {/* Page Header */}
-          <div className="mb-6">
-            <h1 className="text-4xl font-bold mb-2 text-on-surface">ספריית אוצריא</h1>
-            <p className="text-on-surface/70">עיין, חפש וערוך ספרי קודש</p>
-          </div>
-
-          {/* Filters Bar - Top */}
-          <div className="flex flex-col md:flex-row gap-4 mb-6">
-            {/* Search */}
-            <div className="flex-1">
+          {/* Page Header with Search */}
+          <div className="mb-8">
+            <h1 className="text-4xl font-bold mb-6 text-on-surface" style={{ fontFamily: 'FrankRuehl, serif' }}>ספריית אוצריא</h1>
+            
+            {/* Search Bar */}
+            <div className="max-w-2xl">
               <div className="relative">
-                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface/40">
-                  search
-                </span>
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="חיפוש ספר..."
-                  className="w-full pr-12 pl-12 py-3.5 border-2 border-surface-variant rounded-xl focus:outline-none focus:border-primary bg-background text-on-surface placeholder:text-on-surface/40 transition-colors"
+                  className="w-full pr-12 pl-4 py-3 border border-surface-variant rounded-lg focus:outline-none focus:border-primary bg-white text-on-surface placeholder:text-on-surface/40 transition-colors shadow-sm"
                 />
+                <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface/40">
+                  search
+                </span>
                 {searchTerm && (
                   <button
                     onClick={() => setSearchTerm('')}
@@ -198,142 +194,53 @@ export default function LibraryPage() {
                 )}
               </div>
             </div>
+          </div>
 
-            {/* Filter by Status */}
-            <div className="flex gap-2">
+          {/* Filter Tabs */}
+          <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+            <button
+              onClick={() => setFilterStatus('all')}
+              className={`
+                px-4 py-2 rounded-lg transition-all font-medium whitespace-nowrap
+                ${filterStatus === 'all' 
+                  ? 'bg-primary text-on-primary' 
+                  : 'bg-surface text-on-surface hover:bg-surface-variant'}
+              `}
+            >
+              הכל
+            </button>
+
+            {Object.entries(statusConfig).map(([key, config]) => (
               <button
-                onClick={() => setFilterStatus('all')}
+                key={key}
+                onClick={() => setFilterStatus(key)}
                 className={`
-                  px-4 py-3.5 rounded-xl transition-all font-medium border-2
-                  ${filterStatus === 'all' 
-                    ? 'bg-primary-container text-primary border-primary' 
-                    : 'bg-background text-on-surface border-surface-variant hover:border-primary/50'}
+                  px-4 py-2 rounded-lg transition-all font-medium flex items-center gap-2 whitespace-nowrap
+                  ${filterStatus === key 
+                    ? 'bg-primary text-on-primary' 
+                    : 'bg-surface text-on-surface hover:bg-surface-variant'}
                 `}
               >
-                הכל
+                <span className="material-symbols-outlined text-lg">{config.icon}</span>
+                <span>{config.label}</span>
               </button>
-
-              {Object.entries(statusConfig).map(([key, config]) => (
-                <button
-                  key={key}
-                  onClick={() => setFilterStatus(key)}
-                  className={`
-                    px-4 py-3.5 rounded-xl transition-all font-medium border-2 flex items-center gap-2
-                    ${filterStatus === key 
-                      ? 'bg-primary-container text-primary border-primary' 
-                      : 'bg-background text-on-surface border-surface-variant hover:border-primary/50'}
-                  `}
-                  title={config.label}
-                >
-                  <span className="material-symbols-outlined text-xl">{config.icon}</span>
-                  <span className="hidden lg:inline">{config.label}</span>
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
 
-          {/* Main Content - Library + Stats Sidebar */}
-          <div className="grid lg:grid-cols-6 gap-6">
-            {/* Library Tree/List - Takes 5 columns */}
-            <div className="lg:col-span-5">
-              <div className="glass-strong rounded-2xl overflow-hidden border border-surface-variant/30">
-                {/* Header Bar */}
-                <div className="bg-gradient-to-l from-primary/10 to-primary/5 px-6 py-4 border-b border-surface-variant/30">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <h3 className="text-lg font-bold text-on-surface">
-                        {searchTerm ? 'תוצאות חיפוש' : 'הספרייה'}
-                      </h3>
-                      
-                      {searchTerm && (
-                        <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/20 rounded-lg">
-                          <span className="material-symbols-outlined text-sm text-primary">search</span>
-                          <span className="text-sm font-medium text-on-surface">
-                            "{searchTerm}"
-                          </span>
-                          <span className="text-xs text-on-surface/60">
-                            ({Array.isArray(filteredData) ? filteredData.length : 0})
-                          </span>
-                        </div>
-                      )}
-                    </div>
+          {/* Books Grid */}
+          <CardGridView items={filteredData} onFileClick={handleFileClick} />
 
-
-                  </div>
-                </div>
-
-                {/* Content Area - No scroll, infinite */}
-                <div className="p-6">
-                  <ListView items={filteredData} onFileClick={handleFileClick} />
-
-                  {Array.isArray(filteredData) && filteredData.length === 0 && (
-                    <div className="text-center py-20">
-                      <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-surface mb-4">
-                        <span className="material-symbols-outlined text-5xl text-on-surface/30">
-                          search_off
-                        </span>
-                      </div>
-                      <p className="text-lg font-medium text-on-surface/70 mb-2">לא נמצאו תוצאות</p>
-                      <p className="text-sm text-on-surface/50">נסה לשנות את מונחי החיפוש או הסינון</p>
-                    </div>
-                  )}
-                </div>
+          {Array.isArray(filteredData) && filteredData.length === 0 && (
+            <div className="text-center py-20">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-surface mb-4">
+                <span className="material-symbols-outlined text-5xl text-on-surface/30">
+                  search_off
+                </span>
               </div>
+              <p className="text-lg font-medium text-on-surface/70 mb-2">לא נמצאו תוצאות</p>
+              <p className="text-sm text-on-surface/50">נסה לשנות את מונחי החיפוש או הסינון</p>
             </div>
-
-            {/* Stats Sidebar - Takes 1 column */}
-            <div className="lg:col-span-1">
-              <div className="glass-strong rounded-2xl p-4 border border-surface-variant/30 sticky top-24">
-                <div className="text-center mb-4 pb-4 border-b-2 border-surface-variant">
-                  <span className="material-symbols-outlined text-3xl text-primary mb-2 block">bar_chart</span>
-                  <h3 className="text-sm font-bold text-on-surface">סטטיסטיקות</h3>
-                </div>
-                
-                <div className="space-y-3">
-                  {/* Completed */}
-                  <div className="p-3 rounded-lg bg-green-50 border-2 border-green-200 text-center">
-                    <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center mx-auto mb-2">
-                      <span className="material-symbols-outlined text-lg text-green-600">
-                        check_circle
-                      </span>
-                    </div>
-                    <p className="text-2xl font-bold text-green-700 mb-1">{stats.completed}</p>
-                    <p className="text-xs font-medium text-green-700">הושלמו</p>
-                  </div>
-
-                  {/* In Progress */}
-                  <div className="p-3 rounded-lg bg-blue-50 border-2 border-blue-200 text-center">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center mx-auto mb-2">
-                      <span className="material-symbols-outlined text-lg text-blue-600">
-                        edit
-                      </span>
-                    </div>
-                    <p className="text-2xl font-bold text-blue-700 mb-1">{stats['in-progress']}</p>
-                    <p className="text-xs font-medium text-blue-700">בטיפול</p>
-                  </div>
-
-                  {/* Available */}
-                  <div className="p-3 rounded-lg bg-gray-50 border-2 border-gray-200 text-center">
-                    <div className="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center mx-auto mb-2">
-                      <span className="material-symbols-outlined text-lg text-gray-600">
-                        description
-                      </span>
-                    </div>
-                    <p className="text-2xl font-bold text-gray-700 mb-1">{stats.available}</p>
-                    <p className="text-xs font-medium text-gray-700">זמינים</p>
-                  </div>
-                </div>
-
-                {/* Total */}
-                <div className="mt-4 pt-4 border-t-2 border-surface-variant text-center">
-                  <p className="text-xs font-medium text-on-surface/70 mb-1">סה"כ</p>
-                  <p className="text-3xl font-bold text-primary">
-                    {stats.completed + stats['in-progress'] + stats.available}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
@@ -345,8 +252,8 @@ export default function LibraryPage() {
   )
 }
 
-// List View Component
-function ListView({ items, onFileClick }) {
+// Card Grid View Component
+function CardGridView({ items, onFileClick }) {
   const flattenItems = (items, path = []) => {
     let result = []
     items.forEach(item => {
@@ -363,55 +270,54 @@ function ListView({ items, onFileClick }) {
   const files = flattenItems(items)
 
   return (
-    <div className="space-y-1.5">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
       {files.map((file) => {
         const status = statusConfig[file.status]
         return (
           <div
             key={file.id}
             onClick={() => onFileClick(file)}
-            className="group flex items-center gap-3 px-4 py-2.5 bg-surface rounded-lg hover:bg-primary/5 cursor-pointer transition-all duration-200 border border-surface-variant/30 hover:border-primary/30"
+            className="group relative bg-surface hover:bg-surface-variant rounded-xl p-6 cursor-pointer transition-all duration-200 border border-surface-variant hover:border-primary hover:shadow-lg"
           >
-            {/* Icon with background */}
-            <div className={`
-              flex-shrink-0 w-9 h-9 flex items-center justify-center rounded-lg
-              ${status.bgColor} transition-all group-hover:scale-110
-            `}>
-              <span className={`material-symbols-outlined text-xl ${status.color}`}>
-                {status.icon}
+            {/* Status indicator - top right */}
+            <div className="absolute top-3 left-3">
+              <div className={`w-2 h-2 rounded-full ${status.color === 'text-green-600' ? 'bg-green-500' : status.color === 'text-blue-600' ? 'bg-blue-500' : 'bg-gray-400'}`}></div>
+            </div>
+
+            {/* Info icon - top left */}
+            <button 
+              className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation()
+                // Show info
+              }}
+            >
+              <span className="material-symbols-outlined text-lg text-on-surface/40 hover:text-on-surface">
+                info
               </span>
-            </div>
+            </button>
 
-            {/* Content */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="font-bold text-sm text-on-surface group-hover:text-primary transition-colors truncate">
-                  {file.name}
-                </p>
-                {file.path && (
-                  <>
-                    <span className="text-on-surface/30">•</span>
-                    <p className="text-xs text-on-surface/50 truncate">
-                      {file.path.slice(0, -1).join(' / ')}
-                    </p>
-                  </>
-                )}
+            {/* Book content */}
+            <div className="flex flex-col items-center text-center">
+              {/* Icon */}
+              <div className="mb-4">
+                <span className="material-symbols-outlined text-5xl text-on-surface/60">
+                  menu_book
+                </span>
               </div>
+
+              {/* Book name */}
+              <h3 className="font-bold text-on-surface mb-2 line-clamp-2 min-h-[3rem]">
+                {file.name}
+              </h3>
+
+              {/* Path - if exists */}
+              {file.path && file.path.length > 1 && (
+                <p className="text-xs text-on-surface/50 line-clamp-1">
+                  {file.path.slice(0, -1).join(' / ')}
+                </p>
+              )}
             </div>
-
-            {/* Status Badge */}
-            <span className={`
-              flex-shrink-0 px-3 py-1 rounded-md text-xs font-bold border-2
-              ${status.bgColor} ${status.color} ${status.borderColor}
-              transition-all
-            `}>
-              {status.label}
-            </span>
-
-            {/* Arrow indicator */}
-            <span className="material-symbols-outlined text-lg text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-              arrow_back
-            </span>
           </div>
         )
       })}
