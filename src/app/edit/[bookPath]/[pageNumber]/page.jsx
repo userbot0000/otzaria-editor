@@ -10,7 +10,7 @@ export default function EditPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const params = useParams()
-  const bookPath = decodeURIComponent(params.bookPath)
+  const bookPath = params.bookPath // Next.js already decodes this
   const pageNumber = parseInt(params.pageNumber)
   
   const [bookData, setBookData] = useState(null)
