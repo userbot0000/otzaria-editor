@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import Link from 'next/link'
 import Image from 'next/image'
 
@@ -28,6 +29,7 @@ export default function RegisterPage() {
     }
 
     try {
+      // שלב 1: הרשמה
       const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -40,11 +42,22 @@ export default function RegisterPage() {
         throw new Error(data.error || 'שגיאה בהרשמה')
       }
 
-      // הצלחה - מעבר לדף התחברות
-      router.push('/auth/login?registered=true')
+      // שלב 2: התחברות אוטומטית
+      const result = await signIn('credentials', {
+        identifier: formData.email,
+        password: formData.password,
+        redirect: false,
+      })
+
+      if (result?.error) {
+        // אם ההתחברות נכשלה, נעביר לדף התחברות
+        router.push('/auth/login?registered=true')
+      } else {
+        // הצלחה - מעבר לאיזור האישי
+        router.push('/dashboard')
+      }
     } catch (err) {
       setError(err.message)
-    } finally {
       setLoading(false)
     }
   }
