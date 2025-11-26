@@ -17,10 +17,19 @@ export default function AdminClient({ session }) {
     const [showAddBook, setShowAddBook] = useState(false)
     const [newBookName, setNewBookName] = useState('')
     const [addingBook, setAddingBook] = useState(false)
+    const [pages, setPages] = useState([])
+    const [pagesFilter, setPagesFilter] = useState({ status: '', book: '', userId: '' })
+    const [editingPage, setEditingPage] = useState(null)
 
     useEffect(() => {
         loadData()
     }, [])
+
+    useEffect(() => {
+        if (activeTab === 'pages') {
+            loadPages()
+        }
+    }, [activeTab, pagesFilter])
 
     const loadData = async () => {
         try {
@@ -42,6 +51,46 @@ export default function AdminClient({ session }) {
             console.error('Error loading data:', error)
         } finally {
             setLoading(false)
+        }
+    }
+
+    const loadPages = async () => {
+        try {
+            const params = new URLSearchParams()
+            if (pagesFilter.status) params.append('status', pagesFilter.status)
+            if (pagesFilter.book) params.append('book', pagesFilter.book)
+            if (pagesFilter.userId) params.append('userId', pagesFilter.userId)
+
+            const response = await fetch(`/api/admin/pages/list?${params}`)
+            const data = await response.json()
+
+            if (data.success) {
+                setPages(data.pages)
+            }
+        } catch (error) {
+            console.error('Error loading pages:', error)
+        }
+    }
+
+    const handleUpdatePage = async (bookName, pageNumber, updates) => {
+        try {
+            const response = await fetch('/api/admin/pages/update', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bookName, pageNumber, updates })
+            })
+
+            const result = await response.json()
+            if (result.success) {
+                loadPages()
+                setEditingPage(null)
+                alert('העמוד עודכן בהצלחה!')
+            } else {
+                alert(result.error || 'שגיאה בעדכון עמוד')
+            }
+        } catch (error) {
+            console.error('Error updating page:', error)
+            alert('שגיאה בעדכון עמוד')
         }
     }
 
@@ -338,6 +387,18 @@ export default function AdminClient({ session }) {
                                 </span>
                             </button>
                             <button
+                                onClick={() => setActiveTab('pages')}
+                                className={`px-6 py-3 rounded-lg font-medium transition-all ${activeTab === 'pages'
+                                    ? 'bg-primary text-on-primary'
+                                    : 'glass text-on-surface hover:bg-surface-variant'
+                                    }`}
+                            >
+                                <span className="flex items-center gap-2">
+                                    <span className="material-symbols-outlined">description</span>
+                                    עמודים
+                                </span>
+                            </button>
+                            <button
                                 onClick={() => setActiveTab('stats')}
                                 className={`px-6 py-3 rounded-lg font-medium transition-all ${activeTab === 'stats'
                                     ? 'bg-primary text-on-primary'
@@ -593,9 +654,9 @@ export default function AdminClient({ session }) {
                                                         </div>
 
                                                         <div className="flex gap-3 flex-wrap">
-                                                            {upload.downloadUrl ? (
+                                                            {upload.fileName ? (
                                                                 <a
-                                                                    href={upload.downloadUrl}
+                                                                    href={`/api/download/data/uploads/${upload.fileName}`}
                                                                     download={upload.originalFileName}
                                                                     className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                                                                 >
@@ -606,17 +667,6 @@ export default function AdminClient({ session }) {
                                                                 <span className="text-sm text-red-600 px-4 py-2">
                                                                     ⚠️ קובץ לא נמצא
                                                                 </span>
-                                                            )}
-                                                            {upload.fileUrl && (
-                                                                <a
-                                                                    href={upload.fileUrl}
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    className="flex items-center gap-2 px-4 py-2 glass rounded-lg hover:bg-surface-variant transition-colors"
-                                                                >
-                                                                    <span className="material-symbols-outlined">visibility</span>
-                                                                    <span>צפה בקובץ</span>
-                                                                </a>
                                                             )}
                                                             {upload.status === 'pending' && (
                                                                 <>
@@ -641,6 +691,158 @@ export default function AdminClient({ session }) {
                                                 </div>
                                             </div>
                                         ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {activeTab === 'pages' && (
+                            <div className="glass-strong p-6 rounded-xl">
+                                <h2 className="text-2xl font-bold mb-6 text-on-surface">ניהול עמודים</h2>
+                                
+                                {/* Filters */}
+                                <div className="grid md:grid-cols-3 gap-4 mb-6">
+                                    <select
+                                        value={pagesFilter.status}
+                                        onChange={(e) => setPagesFilter({ ...pagesFilter, status: e.target.value })}
+                                        className="px-4 py-2 border border-surface-variant rounded-lg bg-white text-on-surface"
+                                    >
+                                        <option value="">כל הסטטוסים</option>
+                                        <option value="available">זמין</option>
+                                        <option value="in-progress">בטיפול</option>
+                                        <option value="completed">הושלם</option>
+                                    </select>
+
+                                    <select
+                                        value={pagesFilter.book}
+                                        onChange={(e) => setPagesFilter({ ...pagesFilter, book: e.target.value })}
+                                        className="px-4 py-2 border border-surface-variant rounded-lg bg-white text-on-surface"
+                                    >
+                                        <option value="">כל הספרים</option>
+                                        {books.map(book => (
+                                            <option key={book.id} value={book.name}>{book.name}</option>
+                                        ))}
+                                    </select>
+
+                                    <select
+                                        value={pagesFilter.userId}
+                                        onChange={(e) => setPagesFilter({ ...pagesFilter, userId: e.target.value })}
+                                        className="px-4 py-2 border border-surface-variant rounded-lg bg-white text-on-surface"
+                                    >
+                                        <option value="">כל המשתמשים</option>
+                                        {users.map(user => (
+                                            <option key={user.id} value={user.id}>{user.name}</option>
+                                        ))}
+                                    </select>
+                                </div>
+
+                                {/* Pages Table */}
+                                <div className="overflow-x-auto">
+                                    <table className="w-full">
+                                        <thead>
+                                            <tr className="border-b border-surface-variant">
+                                                <th className="text-right p-4 text-on-surface">ספר</th>
+                                                <th className="text-right p-4 text-on-surface">עמוד</th>
+                                                <th className="text-right p-4 text-on-surface">סטטוס</th>
+                                                <th className="text-right p-4 text-on-surface">משתמש</th>
+                                                <th className="text-right p-4 text-on-surface">תאריך</th>
+                                                <th className="text-right p-4 text-on-surface">פעולות</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {pages.map(page => (
+                                                <tr key={`${page.bookName}-${page.number}`} className="border-b border-surface-variant/50 hover:bg-surface-variant/30">
+                                                    <td className="p-4 text-on-surface">{page.bookName}</td>
+                                                    <td className="p-4 text-on-surface font-bold">{page.number}</td>
+                                                    <td className="p-4">
+                                                        {editingPage?.bookName === page.bookName && editingPage?.number === page.number ? (
+                                                            <select
+                                                                value={editingPage.status}
+                                                                onChange={(e) => setEditingPage({ ...editingPage, status: e.target.value })}
+                                                                className="px-2 py-1 border rounded bg-background text-on-surface"
+                                                            >
+                                                                <option value="available">זמין</option>
+                                                                <option value="in-progress">בטיפול</option>
+                                                                <option value="completed">הושלם</option>
+                                                            </select>
+                                                        ) : (
+                                                            <span className={`px-3 py-1 rounded-full text-sm ${
+                                                                page.status === 'completed'
+                                                                    ? 'bg-green-100 text-green-800'
+                                                                    : page.status === 'in-progress'
+                                                                        ? 'bg-blue-100 text-blue-800'
+                                                                        : 'bg-gray-100 text-gray-800'
+                                                            }`}>
+                                                                {page.status === 'completed' ? 'הושלם' : page.status === 'in-progress' ? 'בטיפול' : 'זמין'}
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td className="p-4 text-on-surface">{page.claimedBy || '-'}</td>
+                                                    <td className="p-4 text-on-surface/70 text-sm">
+                                                        {page.completedAt 
+                                                            ? new Date(page.completedAt).toLocaleDateString('he-IL')
+                                                            : page.claimedAt 
+                                                                ? new Date(page.claimedAt).toLocaleDateString('he-IL')
+                                                                : '-'
+                                                        }
+                                                    </td>
+                                                    <td className="p-4">
+                                                        <div className="flex gap-2">
+                                                            {editingPage?.bookName === page.bookName && editingPage?.number === page.number ? (
+                                                                <>
+                                                                    <button
+                                                                        onClick={() => handleUpdatePage(page.bookName, page.number, { status: editingPage.status })}
+                                                                        className="p-2 text-green-600 hover:bg-green-50 rounded"
+                                                                        title="שמור"
+                                                                    >
+                                                                        <span className="material-symbols-outlined">check</span>
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => setEditingPage(null)}
+                                                                        className="p-2 text-gray-600 hover:bg-gray-50 rounded"
+                                                                        title="ביטול"
+                                                                    >
+                                                                        <span className="material-symbols-outlined">close</span>
+                                                                    </button>
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <button
+                                                                        onClick={() => setEditingPage(page)}
+                                                                        className="p-2 text-blue-600 hover:bg-blue-50 rounded"
+                                                                        title="ערוך"
+                                                                    >
+                                                                        <span className="material-symbols-outlined">edit</span>
+                                                                    </button>
+                                                                    {page.status !== 'available' && (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                if (confirm('האם לשחרר את העמוד?')) {
+                                                                                    handleUpdatePage(page.bookName, page.number, { status: 'available' })
+                                                                                }
+                                                                            }}
+                                                                            className="p-2 text-orange-600 hover:bg-orange-50 rounded"
+                                                                            title="שחרר עמוד"
+                                                                        >
+                                                                            <span className="material-symbols-outlined">lock_open</span>
+                                                                        </button>
+                                                                    )}
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {pages.length === 0 && (
+                                    <div className="text-center py-12">
+                                        <span className="material-symbols-outlined text-6xl text-on-surface/30 mb-4">
+                                            description
+                                        </span>
+                                        <p className="text-on-surface/60">אין עמודים להצגה</p>
                                     </div>
                                 )}
                             </div>
