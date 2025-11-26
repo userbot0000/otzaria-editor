@@ -288,7 +288,19 @@ export default function AdminClient({ session }) {
                                                             </span>
                                                         )}
                                                     </td>
-                                                    <td className="p-4 text-on-surface font-bold">{user.points?.toLocaleString() || 0}</td>
+                                                    <td className="p-4">
+                                                        {editingUser?.id === user.id ? (
+                                                            <input
+                                                                type="number"
+                                                                value={editingUser.points || 0}
+                                                                onChange={(e) => setEditingUser({ ...editingUser, points: parseInt(e.target.value) || 0 })}
+                                                                className="px-2 py-1 border rounded bg-background text-on-surface w-24"
+                                                                min="0"
+                                                            />
+                                                        ) : (
+                                                            <span className="text-on-surface font-bold">{user.points?.toLocaleString() || 0}</span>
+                                                        )}
+                                                    </td>
                                                     <td className="p-4 text-on-surface">{user.completedPages || 0}</td>
                                                     <td className="p-4 text-on-surface/70 text-sm">
                                                         {new Date(user.createdAt).toLocaleDateString('he-IL')}
@@ -300,7 +312,8 @@ export default function AdminClient({ session }) {
                                                                     <button
                                                                         onClick={() => handleUpdateUser(user.id, {
                                                                             name: editingUser.name,
-                                                                            role: editingUser.role
+                                                                            role: editingUser.role,
+                                                                            points: editingUser.points
                                                                         })}
                                                                         className="p-2 text-green-600 hover:bg-green-50 rounded"
                                                                         title="שמור"

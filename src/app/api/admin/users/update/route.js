@@ -41,7 +41,7 @@ export async function PUT(request) {
     }
 
     // עדכן רק שדות מותרים
-    const allowedFields = ['name', 'role']
+    const allowedFields = ['name', 'role', 'points']
     allowedFields.forEach(field => {
       if (updates[field] !== undefined) {
         users[userIndex][field] = updates[field]
