@@ -390,16 +390,10 @@ export default function EditPage() {
             </div>
 
             <div className="flex items-center gap-3">
-              <button
-                onClick={handleSave}
-                disabled={saving}
-                className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg hover:bg-accent transition-colors disabled:opacity-50"
-              >
-                <span className="material-symbols-outlined">
-                  {saving ? 'progress_activity' : 'save'}
-                </span>
-                <span>{saving ? 'שומר...' : 'שמור'}</span>
-              </button>
+              <div className="flex items-center gap-2 text-sm text-green-600">
+                <span className="material-symbols-outlined text-base">check_circle</span>
+                <span>נשמר אוטומטית</span>
+              </div>
               
               <Link 
                 href="/dashboard" 
@@ -419,81 +413,69 @@ export default function EditPage() {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Right Panel - PDF Image */}
-        <div className="w-1/2 bg-surface border-l border-surface-variant overflow-auto p-6">
-          <div className="sticky top-6">
-            <div className="glass-strong rounded-xl overflow-hidden border border-surface-variant">
-              <div className="bg-primary/10 px-4 py-3 border-b border-surface-variant">
+      <div className="flex-1 flex overflow-hidden p-6 gap-4">
+        {/* Image Panel */}
+        <div className="w-1/2 flex flex-col">
+          <div className="glass-strong rounded-xl overflow-hidden border border-surface-variant flex-1 flex flex-col">
+            <div className="bg-primary/10 px-4 py-3 border-b border-surface-variant">
+              <div className="flex items-center justify-between">
                 <h2 className="font-bold text-on-surface flex items-center gap-2">
                   <span className="material-symbols-outlined">image</span>
                   <span>תמונת העמוד</span>
                 </h2>
-              </div>
-              
-              <div className="p-4 bg-white">
-                {thumbnailUrl ? (
-                  <img 
-                    src={thumbnailUrl} 
-                    alt={`עמוד ${pageNumber}`}
-                    className="w-full h-auto rounded-lg shadow-lg"
-                    onError={(e) => {
-                      console.error('Failed to load image:', thumbnailUrl)
-                      e.target.style.display = 'none'
-                      e.target.nextSibling.style.display = 'flex'
-                    }}
-                  />
-                ) : null}
-                <div 
-                  className="flex items-center justify-center min-h-[600px] bg-surface rounded-lg"
-                  style={{ display: thumbnailUrl ? 'none' : 'flex' }}
-                >
-                  <div className="text-center">
-                    <span className="material-symbols-outlined text-9xl text-on-surface/20 block mb-4">
-                      description
-                    </span>
-                    <p className="text-on-surface/60">אין תמונה זמינה</p>
-                    {pageData && (
-                      <p className="text-xs text-on-surface/40 mt-2">
-                        (עמוד {pageNumber})
-                      </p>
-                    )}
-                  </div>
-                </div>
+                <span className="text-sm text-on-surface/60">עמוד {pageNumber} מתוך {bookData?.totalPages}</span>
               </div>
             </div>
-
-            {/* Page Info */}
-            <div className="mt-4 glass p-4 rounded-xl border border-surface-variant">
-              <div className="flex items-center gap-2 text-sm text-on-surface/70">
-                <span className="material-symbols-outlined text-primary">info</span>
-                <span>עמוד {pageNumber} מתוך {bookData?.totalPages}</span>
+            
+            <div className="flex-1 overflow-auto p-4 bg-white">
+              {thumbnailUrl ? (
+                <img 
+                  src={thumbnailUrl} 
+                  alt={`עמוד ${pageNumber}`}
+                  className="w-full h-auto rounded-lg shadow-lg"
+                  onError={(e) => {
+                    console.error('Failed to load image:', thumbnailUrl)
+                    e.target.style.display = 'none'
+                    e.target.nextSibling.style.display = 'flex'
+                  }}
+                />
+              ) : null}
+              <div 
+                className="flex items-center justify-center min-h-full bg-surface rounded-lg"
+                style={{ display: thumbnailUrl ? 'none' : 'flex' }}
+              >
+                <div className="text-center">
+                  <span className="material-symbols-outlined text-9xl text-on-surface/20 block mb-4">
+                    description
+                  </span>
+                  <p className="text-on-surface/60">אין תמונה זמינה</p>
+                  <p className="text-xs text-on-surface/40 mt-2">(עמוד {pageNumber})</p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Left Panel - Text Editor */}
+        {/* Text Editor Panel */}
         <div className="w-1/2 flex flex-col">
-          <div className="flex-1 flex flex-col p-6">
-            <div className="glass-strong rounded-xl border border-surface-variant flex-1 flex flex-col overflow-hidden">
-              <div className="bg-primary/10 px-4 py-3 border-b border-surface-variant">
-                <div className="flex items-center justify-between">
-                  <h2 className="font-bold text-on-surface flex items-center gap-2">
-                    <span className="material-symbols-outlined">edit_note</span>
-                    <span>עריכת טקסט</span>
-                  </h2>
-                  <button
-                    onClick={toggleColumns}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-surface-variant rounded-lg hover:border-primary transition-colors text-sm"
-                  >
-                    <span className="material-symbols-outlined text-lg">
-                      {twoColumns ? 'view_column' : 'view_agenda'}
-                    </span>
-                    <span>{twoColumns ? 'שני טורים' : 'טור אחד'}</span>
-                  </button>
-                </div>
+          <div className="glass-strong rounded-xl border border-surface-variant flex-1 flex flex-col overflow-hidden">
+            <div className="bg-primary/10 px-4 py-3 border-b border-surface-variant">
+              <div className="flex items-center justify-between">
+                <h2 className="font-bold text-on-surface flex items-center gap-2">
+                  <span className="material-symbols-outlined">edit_note</span>
+                  <span>עריכת טקסט</span>
+                </h2>
+                <button
+                  onClick={toggleColumns}
+                  className="flex items-center gap-2 px-3 py-1.5 bg-white border-2 border-surface-variant rounded-lg hover:border-primary transition-colors text-sm"
+                >
+                  <span className="material-symbols-outlined text-lg">
+                    {twoColumns ? 'view_column' : 'view_agenda'}
+                  </span>
+                  <span>{twoColumns ? 'שני טורים' : 'טור אחד'}</span>
+                </button>
               </div>
+            </div>
 
               {/* Toolbar */}
               <div className="px-4 py-2 border-b border-surface-variant bg-surface/30 flex items-center justify-center gap-2 flex-wrap">
