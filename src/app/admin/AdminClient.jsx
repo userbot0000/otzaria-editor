@@ -271,13 +271,26 @@ export default function AdminClient({ session }) {
                                 </h1>
                                 <p className="text-on-surface/60 mt-2">ניהול מלא של המערכת</p>
                             </div>
-                            <Link
-                                href="/dashboard"
-                                className="flex items-center gap-2 px-4 py-2 glass rounded-lg hover:bg-surface-variant transition-colors"
-                            >
-                                <span className="material-symbols-outlined">arrow_forward</span>
-                                <span>חזרה לדשבורד</span>
-                            </Link>
+                            <div className="flex gap-3">
+                                {session.user.name === 'admin' && (
+                                    <a
+                                        href="/api/admin/export-backup"
+                                        download
+                                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                                        title="הורד גיבוי מלא (רק למשתמש admin)"
+                                    >
+                                        <span className="material-symbols-outlined">download</span>
+                                        <span>גיבוי מלא</span>
+                                    </a>
+                                )}
+                                <Link
+                                    href="/dashboard"
+                                    className="flex items-center gap-2 px-4 py-2 glass rounded-lg hover:bg-surface-variant transition-colors"
+                                >
+                                    <span className="material-symbols-outlined">arrow_forward</span>
+                                    <span>חזרה לדשבורד</span>
+                                </Link>
+                            </div>
                         </div>
 
                         {/* Stats Overview */}
