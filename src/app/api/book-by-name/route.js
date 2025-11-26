@@ -59,16 +59,18 @@ export async function GET(request) {
         
         console.log(`Book "${bookName}" has ${numPages} pages`)
 
-        // טען נתוני עמודים מ-Blob Storage
+        // טען נתוני עמודים מ-MongoDB
         const pagesDataFile = `data/pages/${bookName}.json`
         let pagesData = await readJSON(pagesDataFile)
 
-        if (!pagesData) {
-            pagesData = await createPagesData(numPages, [], bookName)
-            await saveJSON(pagesDataFile, pagesData)
-        } else if (pagesData.length !== numPages) {
-            console.log(`Updating pages count from ${pagesData.length} to ${numPages}`)
-            pagesData = await createPagesData(numPages, pagesData, bookName)
+        // בדוק אם צריך לעדכן את התמונות (אם הן לא מ-GitHub)
+        const needsUpdate = !pagesData || 
+                           pagesData.length !== numPages || 
+                           (USE_GITHUB && pagesData[0]?.thumbnail && !pagesData[0].thumbnail.startsWith('http'))
+
+        if (needsUpdate) {
+            console.log(`🔄 Updating pages data (reason: ${!pagesData ? 'no data' : pagesData.length !== numPages ? 'count mismatch' : 'thumbnails need update'})`)
+            pagesData = await createPagesData(numPages, pagesData || [], bookName)
             await saveJSON(pagesDataFile, pagesData)
         }
 
