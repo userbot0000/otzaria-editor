@@ -422,6 +422,22 @@ export default function EditPage() {
               {/* Left Side - Image Tools */}
               <div className="flex items-center gap-3">
                 <span className="text-sm text-on-surface/60">עמוד {pageNumber} מתוך {bookData?.totalPages}</span>
+                
+                <div className="w-px h-6 bg-surface-variant"></div>
+                
+                <a
+                  href="https://aistudio.google.com/prompts/new_chat?model=gemini-2.0-flash-exp"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 hover:bg-white rounded transition-colors border border-transparent hover:border-primary flex items-center gap-1"
+                  title="פתח Gemini AI"
+                >
+                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L2 7L12 12L22 7L12 2Z" fill="#4285F4"/>
+                    <path d="M2 17L12 22L22 17L12 12L2 17Z" fill="#34A853"/>
+                    <path d="M2 12L12 17L22 12" stroke="#FBBC04" strokeWidth="2" fill="none"/>
+                  </svg>
+                </a>
               </div>
 
               {/* Right Side - Text Tools */}
