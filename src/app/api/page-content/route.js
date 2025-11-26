@@ -4,7 +4,8 @@ import path from 'path'
 
 export async function POST(request) {
   try {
-    const { bookPath, pageNumber, content, leftColumn, rightColumn, twoColumns } = await request.json()
+    const body = await request.json()
+    const { bookPath, pageNumber, content, leftColumn, rightColumn, twoColumns, rightColumnName, leftColumnName } = body
 
     if (!bookPath || !pageNumber) {
       return NextResponse.json(
@@ -21,8 +22,10 @@ export async function POST(request) {
     let textContent = ''
     
     if (twoColumns) {
-      // אם יש שני טורים, שמור אותם עם מפריד
-      textContent = `=== טור ימין ===\n${rightColumn || ''}\n\n=== טור שמאל ===\n${leftColumn || ''}`
+      // אם יש שני טורים, שמור אותם עם מפריד וכותרות
+      const rightName = rightColumnName || 'חלק 1'
+      const leftName = leftColumnName || 'חלק 2'
+      textContent = `=== ${rightName} ===\n${rightColumn || ''}\n\n=== ${leftName} ===\n${leftColumn || ''}`
     } else {
       // אם יש טור אחד, שמור אותו כמו שהוא
       textContent = content || ''
@@ -76,16 +79,17 @@ export async function GET(request) {
     }
     
     // נסה לזהות אם יש שני טורים
-    const rightMatch = textContent.match(/=== טור ימין ===\n([\s\S]*?)\n\n=== טור שמאל ===/)
-    const leftMatch = textContent.match(/=== טור שמאל ===\n([\s\S]*)/)
+    const columnsMatch = textContent.match(/=== (.+?) ===\n([\s\S]*?)\n\n=== (.+?) ===\n([\s\S]*)/)
     
     let data
-    if (rightMatch && leftMatch) {
+    if (columnsMatch) {
       // יש שני טורים
       data = {
         content: '',
-        leftColumn: leftMatch[1] || '',
-        rightColumn: rightMatch[1] || '',
+        leftColumn: columnsMatch[4] || '',
+        rightColumn: columnsMatch[2] || '',
+        rightColumnName: columnsMatch[1] || 'חלק 1',
+        leftColumnName: columnsMatch[3] || 'חלק 2',
         twoColumns: true
       }
     } else {
@@ -94,6 +98,8 @@ export async function GET(request) {
         content: textContent,
         leftColumn: '',
         rightColumn: '',
+        rightColumnName: 'חלק 1',
+        leftColumnName: 'חלק 2',
         twoColumns: false
       }
     }

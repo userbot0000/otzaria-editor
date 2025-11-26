@@ -200,9 +200,11 @@ export default function BookPage() {
       const data = contentResult.data
       let textContent = ''
       
-      // בנה את התוכן (בלי המפרידים של "טור ימין/שמאל")
+      // בנה את התוכן עם כותרות ברורות
       if (data.twoColumns) {
-        textContent = data.rightColumn + '\n' + data.leftColumn
+        const rightName = data.rightColumnName || 'חלק 1'
+        const leftName = data.leftColumnName || 'חלק 2'
+        textContent = `${rightName}:\n${data.rightColumn}\n\n${leftName}:\n${data.leftColumn}`
       } else {
         textContent = data.content
       }

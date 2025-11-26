@@ -69,6 +69,8 @@ export default function EditPage() {
         setContent(data.content || '')
         setLeftColumn(data.leftColumn || '')
         setRightColumn(data.rightColumn || '')
+        setRightColumnName(data.rightColumnName || 'חלק 1')
+        setLeftColumnName(data.leftColumnName || 'חלק 2')
         setTwoColumns(data.twoColumns || false)
       }
     } catch (err) {
@@ -143,7 +145,9 @@ export default function EditPage() {
               content: contentText,
               leftColumn: leftText,
               rightColumn: rightText,
-              twoColumns: twoCol
+              twoColumns: twoCol,
+              rightColumnName,
+              leftColumnName
             })
           })
           console.log('✅ Auto-saved')
@@ -907,13 +911,14 @@ export default function EditPage() {
               </div>
             </div>
 
-            <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4 mb-6">
+            <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4 mb-6">
               <div className="flex items-start gap-2">
-                <span className="material-symbols-outlined text-yellow-600">warning</span>
-                <div className="text-sm text-yellow-800">
-                  <p className="font-bold mb-1">האם אתה בטוח?</p>
-                  <p>עמוד זה כולל שני חלקים (טורים)?</p>
-                  <p className="mt-2 text-xs">הטקסט הקיים יועבר לחלק 1</p>
+                <span className="material-symbols-outlined text-blue-600">info</span>
+                <div className="text-sm text-blue-800">
+                  <p className="font-bold mb-1">שני מצבים:</p>
+                  <p className="mb-2">• <strong>פיצול תוכן</strong>: העמוד מכיל שני חלקים שונים (טורים)</p>
+                  <p>• <strong>חלוקה ויזואלית</strong>: רק לנוחות העריכה, בהעלאה יאוחדו</p>
+                  <p className="mt-2 text-xs text-blue-600">הטקסט הקיים יועבר לחלק 1</p>
                 </div>
               </div>
             </div>
