@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
-import { saveJSON, readJSON, listFiles } from '@/lib/storage'
+import { saveJSON, readJSON } from '@/lib/storage'
+import { listImages } from '@/lib/github-storage'
 import path from 'path'
 import fs from 'fs'
 
 const USE_BLOB = process.env.USE_BLOB_STORAGE === 'true' || process.env.VERCEL_ENV === 'production'
+const USE_GITHUB = process.env.USE_GITHUB_STORAGE === 'true' || process.env.VERCEL_ENV === 'production'
 const THUMBNAILS_PATH = path.join(process.cwd(), 'public', 'thumbnails')
 
 export const runtime = 'nodejs'
@@ -97,7 +99,22 @@ async function createPagesData(numPages, existingData = [], bookName) {
     const pagesData = []
     
     let thumbnails = []
-    if (USE_BLOB) {
+    let bookId = null
+    
+    if (USE_GITHUB) {
+        // טען מיפוי ספרים
+        const mapping = await readJSON('data/book-mapping.json')
+        bookId = Object.entries(mapping || {}).find(([id, name]) => name === bookName)?.[0]
+        
+        if (bookId) {
+            const images = await listImages(bookId)
+            thumbnails = images.map(img => ({
+                name: img.pathname.replace(`${bookId}_`, ''),
+                url: img.url
+            }))
+        }
+    } else if (USE_BLOB) {
+        const { listFiles } = await import('@/lib/storage')
         const blobs = await listFiles(`thumbnails/${bookName}/`)
         thumbnails = blobs.map(blob => ({
             name: blob.pathname.split('/').pop(),
@@ -109,7 +126,9 @@ async function createPagesData(numPages, existingData = [], bookName) {
         const existingPage = existingData.find(p => p.number === i)
         let thumbnail = null
         
-        if (USE_BLOB) {
+        if (USE_GITHUB && bookId) {
+            thumbnail = findPageThumbnailFromBlobs(thumbnails, i, bookName)
+        } else if (USE_BLOB) {
             thumbnail = findPageThumbnailFromBlobs(thumbnails, i, bookName)
         } else {
             const thumbnailsPath = path.join(THUMBNAILS_PATH, bookName)
@@ -184,8 +203,35 @@ function findPageThumbnail(thumbnailsPath, pageNumber, bookName) {
 }
 
 async function getPageCountFromThumbnails(bookName) {
-    if (USE_BLOB) {
+    if (USE_GITHUB) {
         try {
+            // טען מיפוי ספרים
+            const mapping = await readJSON('data/book-mapping.json')
+            if (!mapping) {
+                console.error('❌ No book mapping found')
+                return null
+            }
+            
+            // מצא את ה-ID של הספר
+            const bookId = Object.entries(mapping).find(([id, name]) => name === bookName)?.[0]
+            if (!bookId) {
+                console.error(`❌ No book ID found for: ${bookName}`)
+                return null
+            }
+            
+            console.log(`📚 Book ID: ${bookId}`)
+            
+            // קבל תמונות מ-GitHub
+            const images = await listImages(bookId)
+            console.log(`📸 Found ${images.length} images on GitHub`)
+            return images.length || null
+        } catch (error) {
+            console.error('❌ Error counting thumbnails from GitHub:', error)
+            throw error
+        }
+    } else if (USE_BLOB) {
+        try {
+            const { listFiles } = await import('@/lib/storage')
             const blobs = await listFiles(`thumbnails/${bookName}/`)
             if (blobs.length === 0) {
                 const blobs2 = await listFiles(`thumbnails/${bookName}`)

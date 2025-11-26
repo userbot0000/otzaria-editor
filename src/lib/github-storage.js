@@ -7,7 +7,7 @@ const octokit = new Octokit({
 
 const GITHUB_OWNER = process.env.GITHUB_OWNER // שם המשתמש שלך
 const GITHUB_REPO = process.env.GITHUB_REPO // שם הריפו
-const RELEASE_TAG = 'thumbnails-v1' // תג לכל התמונות
+const RELEASE_TAG = 'thumbnails-v2' // תג לכל התמונות
 
 let releaseId = null
 
@@ -116,7 +116,7 @@ export async function getImageUrl(path) {
 }
 
 // טען מיפוי ספרים
-async function loadBookMapping() {
+export async function loadBookMapping() {
   try {
     const { readJSON } = await import('./storage.js')
     const mapping = await readJSON('data/book-mapping.json')
@@ -128,13 +128,13 @@ async function loadBookMapping() {
 }
 
 // המר ID באנגלית לשם עברי
-async function getBookNameFromId(bookId) {
+export async function getBookNameFromId(bookId) {
   const mapping = await loadBookMapping()
   return mapping[bookId] || bookId
 }
 
 // המר שם עברי ל-ID באנגלית
-async function getBookIdFromName(bookName) {
+export async function getBookIdFromName(bookName) {
   const mapping = await loadBookMapping()
   const entry = Object.entries(mapping).find(([id, name]) => name === bookName)
   return entry ? entry[0] : null
@@ -144,13 +144,6 @@ async function getBookIdFromName(bookName) {
 export async function listImages(prefix = '') {
   try {
     const releaseId = await getOrCreateRelease()
-    
-    const { data: assets } = await octokit.repos.listReleaseAssets({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
-      release_id: releaseId,
-      per_page: 100,
-    })
     
     // אם יש prefix (שם ספר), המר אותו ל-ID
     let filterPrefix = prefix
@@ -162,7 +155,36 @@ export async function listImages(prefix = '') {
       }
     }
     
-    return assets
+    // טען את כל ה-assets (עם pagination)
+    let allAssets = []
+    let page = 1
+    let hasMore = true
+    
+    while (hasMore) {
+      const { data: assets } = await octokit.repos.listReleaseAssets({
+        owner: GITHUB_OWNER,
+        repo: GITHUB_REPO,
+        release_id: releaseId,
+        per_page: 100,
+        page: page,
+      })
+      
+      if (assets.length === 0) {
+        hasMore = false
+      } else {
+        allAssets = allAssets.concat(assets)
+        page++
+        
+        // אם קיבלנו פחות מ-100, זה העמוד האחרון
+        if (assets.length < 100) {
+          hasMore = false
+        }
+      }
+    }
+    
+    logger.log(`📸 Loaded ${allAssets.length} total assets from GitHub`)
+    
+    return allAssets
       .filter(a => !filterPrefix || a.name.startsWith(filterPrefix))
       .map(a => ({
         pathname: a.name,

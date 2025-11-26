@@ -167,19 +167,19 @@ export default function LibraryPage() {
 
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-7xl mx-auto">
-          {/* Top Container - Header + Description + Search | Chart */}
+          {/* Top Container - Header + Description + Search + Filters | Chart */}
           <div className="grid lg:grid-cols-2 gap-6 mb-8">
-            {/* Left Side - Header + Description + Search */}
-            <div className="flex flex-col">
+            {/* Left Side - Header + Description + Search + Filters */}
+            <div className="flex flex-col h-full">
               <h1 className="text-4xl font-bold mb-4 text-on-surface" style={{ fontFamily: 'FrankRuehl, serif' }}>ספריית אוצריא</h1>
               
               <p className="text-on-surface/150 leading-relaxed" style={{ marginBottom: '20px' }}>
-                ספרייה זו כוללת ספרים מאתר <span className="font-bold">hebrewbooks</span> שמיועדים להוספה למאגר אוצריא.
+                ספרייה זו כוללת ספרים מאתר <a href="https://hebrewbooks.org/" target="_blank" rel="noopener noreferrer" className="font-bold text-primary hover:text-accent underline transition-colors">hebrewbooks</a> שמיועדים להוספה למאגר אוצריא.
                 <br />
                 יחד נגדיל את מאגר הטקסט התורני הגדול בעולם!
               </p>
               
-              <div className="relative">
+              <div className="relative mb-4">
                 <input
                   type="text"
                   value={searchTerm}
@@ -199,20 +199,12 @@ export default function LibraryPage() {
                   </button>
                 )}
               </div>
-            </div>
 
-            {/* Right Side - Chart */}
-            <div>
-              <WeeklyProgressChart />
-            </div>
-          </div>
+              {/* Flexible spacer */}
+              <div className="flex-grow"></div>
 
-          {/* Bottom Container - Library Grid | Stats Cards */}
-          <div className="grid lg:grid-cols-6 gap-6">
-            {/* Library Section - Takes 5 columns */}
-            <div className="lg:col-span-5">
               {/* Filter Tabs */}
-              <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+              <div className="flex gap-2 overflow-x-auto pb-2">
                 <button
                   onClick={() => setFilterStatus('all')}
                   className={`
@@ -241,7 +233,18 @@ export default function LibraryPage() {
                   </button>
                 ))}
               </div>
+            </div>
 
+            {/* Right Side - Chart */}
+            <div>
+              <WeeklyProgressChart />
+            </div>
+          </div>
+
+          {/* Bottom Container - Library Grid | Stats Cards */}
+          <div className="grid lg:grid-cols-6 gap-6">
+            {/* Library Section - Takes 5 columns */}
+            <div className="lg:col-span-5">
               {/* Books Grid */}
               <CardGridView items={filteredData} onFileClick={handleFileClick} />
 
@@ -330,7 +333,7 @@ function WeeklyProgressChart() {
 
   if (loading) {
     return (
-      <div className="bg-surface rounded-xl p-6 border border-surface-variant mb-8 flex items-center justify-center h-[350px]">
+      <div className="bg-surface rounded-xl p-4 border border-surface-variant flex items-center justify-center h-[200px]">
         <span className="material-symbols-outlined animate-spin text-4xl text-primary">
           progress_activity
         </span>
@@ -339,20 +342,20 @@ function WeeklyProgressChart() {
   }
 
   return (
-    <div className="bg-surface rounded-xl p-6 border border-surface-variant mb-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-surface rounded-xl p-4 border border-surface-variant">
+      <div className="flex items-center justify-between mb-4">
         <div>
-          <h2 className="text-xl font-bold text-on-surface mb-1">התקדמות שבועית</h2>
-          <p className="text-sm text-on-surface/60">עמודים שהושלמו בשבוע האחרון</p>
+          <h2 className="text-lg font-bold text-on-surface mb-1">התקדמות שבועית</h2>
+          <p className="text-xs text-on-surface/60">עמודים שהושלמו בשבוע האחרון</p>
         </div>
         <div className="text-left">
-          <p className="text-sm text-on-surface/60">סה"כ השבוע</p>
-          <p className="text-3xl font-bold text-primary">{totalPages}</p>
+          <p className="text-xs text-on-surface/60">סה"כ השבוע</p>
+          <p className="text-2xl font-bold text-primary">{totalPages}</p>
         </div>
       </div>
       
       {chartData.length > 0 ? (
-        <ResponsiveContainer width="100%" height={250}>
+        <ResponsiveContainer width="100%" height={150}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#e7e0d8" />
             <XAxis 
