@@ -66,8 +66,8 @@ export async function loadLibraryStructure() {
  */
 async function scanBlobThumbnails() {
   try {
-    logger.log('🔍 Scanning Blob Storage for thumbnails...')
-    const blobs = await listFiles('thumbnails/')
+    logger.log('🔍 Scanning GitHub for thumbnails...')
+    const blobs = await listFiles('thumbnails')
     logger.log('📦 Total blobs found:', blobs.length)
     
     if (blobs.length > 0) {
@@ -79,20 +79,22 @@ async function scanBlobThumbnails() {
     for (const blob of blobs) {
       logger.log('  Processing blob:', blob.pathname)
       
-      // נתיב לדוגמה: dev/thumbnails/חוות דעת/page-1.jpg
-      const pathParts = blob.pathname.split('/')
-      logger.log('    Path parts:', pathParts)
+      // נתיב לדוגמה: thumbnails_חוות_דעת_page-1.jpg
+      const fileName = blob.pathname.split('/').pop() // קבל רק את שם הקובץ
       
-      // צריך לפחות 4 חלקים: dev/thumbnails/bookName/file.jpg
-      if (pathParts.length < 4) {
-        logger.log('    ⏭️  Skipping - not enough path parts')
+      if (!fileName.startsWith('thumbnails_')) {
+        logger.log('    ⏭️  Skipping - not a thumbnail')
         continue
       }
-
-      // pathParts[0] = 'dev'
-      // pathParts[1] = 'thumbnails'
-      // pathParts[2] = שם הספר
-      const bookName = pathParts[2]
+      
+      // פרק את שם הקובץ: thumbnails_חוות_דעת_page-1.jpg
+      const parts = fileName.replace('thumbnails_', '').split('_')
+      
+      // הסר את החלק האחרון (page-X.jpg)
+      const pagePart = parts.pop()
+      
+      // מה שנשאר הוא שם הספר
+      const bookName = parts.join('_').replace(/_/g, ' ')
       logger.log('    📖 Book name:', bookName)
       
       if (!books.has(bookName)) {

@@ -123,10 +123,9 @@ export default function LibraryPage() {
   }, [searchTerm, filterStatus, libraryData])
 
   const handleFileClick = (file) => {
-    // נווט לדף הספר
-    if (file.path) {
-      router.push(`/book/${encodeURIComponent(file.path)}`)
-    }
+    // נווט לדף הספר - השתמש בשם הספר בלבד
+    const bookName = Array.isArray(file.path) ? file.path[file.path.length - 1] : file.name
+    router.push(`/book/${encodeURIComponent(bookName)}`)
   }
 
   if (status === 'loading' || loading) {
