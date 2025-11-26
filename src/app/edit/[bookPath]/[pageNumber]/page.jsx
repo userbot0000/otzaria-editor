@@ -363,17 +363,6 @@ export default function EditPage() {
   }
 
   const thumbnailUrl = pageData?.thumbnail
-  
-  // Debug logging
-  useEffect(() => {
-    if (pageData) {
-      console.log('Page data loaded:', {
-        pageNumber: pageData.number,
-        hasThumbnail: !!pageData.thumbnail,
-        thumbnailUrl: pageData.thumbnail
-      })
-    }
-  }, [pageData])
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
