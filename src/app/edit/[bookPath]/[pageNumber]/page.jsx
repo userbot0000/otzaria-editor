@@ -10,13 +10,8 @@ export default function EditPage() {
   const { data: session, status } = useSession()
   const router = useRouter()
   const params = useParams()
-  
-  // פענח את ה-path - Next.js לא תמיד מפענח אוטומטית
-  const rawBookPath = params.bookPath
-  const bookPath = rawBookPath.includes('%') ? decodeURIComponent(rawBookPath) : rawBookPath
+  const bookPath = decodeURIComponent(params.bookPath)
   const pageNumber = parseInt(params.pageNumber)
-  
-  console.log('Edit page - raw:', rawBookPath, 'decoded:', bookPath)
   
   const [bookData, setBookData] = useState(null)
   const [pageData, setPageData] = useState(null)
@@ -35,48 +30,42 @@ export default function EditPage() {
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/auth/login')
-      return
+    } else if (status === 'authenticated') {
+      loadPageData()
     }
-    
-    if (status !== 'authenticated') {
-      return
-    }
+  }, [status, bookPath, pageNumber])
 
-    const loadPageData = async () => {
-      try {
-        setLoading(true)
-        
-        // טען נתוני ספר - משתמש באותו API כמו דף הספר
-        const bookResponse = await fetch(`/api/book-by-name?name=${encodeURIComponent(bookPath)}`)
-        const bookResult = await bookResponse.json()
-        
-        if (bookResult.success) {
-          setBookData(bookResult.book)
-          const page = bookResult.pages.find(p => p.number === pageNumber)
-          console.log('Page data:', page) // Debug log
-          setPageData(page)
-        }
-        
-        // טען תוכן שמור
-        const contentResponse = await fetch(`/api/page-content?bookPath=${encodeURIComponent(bookPath)}&pageNumber=${pageNumber}`)
-        const contentResult = await contentResponse.json()
-        
-        if (contentResult.success && contentResult.data) {
-          const data = contentResult.data
-          setContent(data.content || '')
-          setLeftColumn(data.leftColumn || '')
-          setRightColumn(data.rightColumn || '')
-          setTwoColumns(data.twoColumns || false)
-        }
-      } catch (err) {
-        console.error('Error loading page:', err)
-      } finally {
-        setLoading(false)
+  const loadPageData = async () => {
+    try {
+      setLoading(true)
+      
+      // טען נתוני ספר
+      const bookResponse = await fetch(`/api/book/${encodeURIComponent(bookPath)}`)
+      const bookResult = await bookResponse.json()
+      
+      if (bookResult.success) {
+        setBookData(bookResult.book)
+        const page = bookResult.pages.find(p => p.number === pageNumber)
+        setPageData(page)
       }
+      
+      // טען תוכן שמור
+      const contentResponse = await fetch(`/api/page-content?bookPath=${encodeURIComponent(bookPath)}&pageNumber=${pageNumber}`)
+      const contentResult = await contentResponse.json()
+      
+      if (contentResult.success && contentResult.data) {
+        const data = contentResult.data
+        setContent(data.content || '')
+        setLeftColumn(data.leftColumn || '')
+        setRightColumn(data.rightColumn || '')
+        setTwoColumns(data.twoColumns || false)
+      }
+    } catch (err) {
+      console.error('Error loading page:', err)
+    } finally {
+      setLoading(false)
     }
-
-    loadPageData()
-  }, [status, bookPath, pageNumber, router])
+  }
 
   const handleSave = async () => {
     setSaving(true)
