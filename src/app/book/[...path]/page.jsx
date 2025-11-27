@@ -81,6 +81,42 @@ export default function BookPage() {
     }
   }
 
+  const handleReleasePage = async (pageNumber) => {
+    if (!session) {
+      return
+    }
+
+    if (!confirm('האם אתה בטוח שברצונך לשחרר את העמוד? תאבד 5 נקודות.')) {
+      return
+    }
+
+    try {
+      console.log('🔓 Releasing page:', { bookPath, pageNumber })
+      
+      const response = await fetch(`/api/book/release-page`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bookPath,
+          pageNumber,
+          userId: session.user.id,
+        })
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        alert('✅ העמוד שוחרר בהצלחה!')
+        loadBookData() // רענן את הנתונים
+      } else {
+        alert(`❌ ${result.error}`)
+      }
+    } catch (error) {
+      console.error('Error releasing page:', error)
+      alert('❌ שגיאה בשחרור העמוד')
+    }
+  }
+
   const handleClaimPage = async (pageNumber) => {
     if (!session) {
       router.push('/auth/login')
@@ -392,6 +428,7 @@ export default function BookPage() {
                   page={page}
                   onClaim={handleClaimPage}
                   onComplete={handleMarkComplete}
+                  onRelease={handleReleasePage}
                   currentUser={session?.user}
                   bookPath={bookPath}
                 />
@@ -426,7 +463,7 @@ export default function BookPage() {
 }
 
 // Page Card Component
-function PageCard({ page, onClaim, onComplete, currentUser, bookPath }) {
+function PageCard({ page, onClaim, onComplete, onRelease, currentUser, bookPath }) {
   const status = pageStatusConfig[page.status]
   const isClaimedByMe = currentUser && page.claimedBy === currentUser.name
 
@@ -443,7 +480,7 @@ function PageCard({ page, onClaim, onComplete, currentUser, bookPath }) {
               alt={`עמוד ${page.number}`}
               className="w-full h-full object-cover"
             />
-            <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs font-bold">
+            <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs font-bold z-10">
               {page.number}
             </div>
           </>
@@ -454,13 +491,29 @@ function PageCard({ page, onClaim, onComplete, currentUser, bookPath }) {
                 description
               </span>
             </div>
-            <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs font-bold">
+            <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs font-bold z-10">
               {page.number}
             </div>
           </>
         )}
         
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        {/* כפתור שחרור - מחוץ לתנאי של התמונה */}
+        {page.status === 'in-progress' && isClaimedByMe && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              e.preventDefault()
+              onRelease(page.number)
+            }}
+            className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white p-2 rounded-lg transition-all shadow-lg z-20 cursor-pointer hover:scale-110"
+            title="שחרר עמוד"
+            type="button"
+          >
+            <span className="material-symbols-outlined text-lg">close</span>
+          </button>
+        )}
+        
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
       </div>
 
       {/* Page Info */}
