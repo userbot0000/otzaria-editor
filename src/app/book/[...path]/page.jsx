@@ -464,57 +464,76 @@ export default function BookPage() {
 
 // Page Card Component
 function PageCard({ page, onClaim, onComplete, onRelease, currentUser, bookPath }) {
+  const [showPreview, setShowPreview] = useState(false)
   const status = pageStatusConfig[page.status]
   const isClaimedByMe = currentUser && page.claimedBy === currentUser.name
 
   return (
-    <div 
-      className="group relative glass rounded-xl overflow-hidden border-2 border-surface-variant hover:border-primary/50 transition-all"
-    >
-      {/* Page Preview */}
-      <div className="aspect-[3/4] bg-surface flex items-center justify-center relative overflow-hidden">
-        {page.thumbnail ? (
-          <>
-            <img 
-              src={page.thumbnail} 
-              alt={`עמוד ${page.number}`}
-              className="w-full h-full object-cover"
-            />
-            <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs font-bold z-10">
-              {page.number}
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="material-symbols-outlined text-6xl text-on-surface/20">
-                description
-              </span>
-            </div>
-            <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs font-bold z-10">
-              {page.number}
-            </div>
-          </>
-        )}
-        
-        {/* כפתור שחרור - מחוץ לתנאי של התמונה */}
-        {page.status === 'in-progress' && isClaimedByMe && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              e.preventDefault()
-              onRelease(page.number)
-            }}
-            className="absolute top-2 right-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white p-2 rounded-lg transition-all shadow-lg z-20 cursor-pointer hover:scale-110"
-            title="שחרר עמוד"
-            type="button"
-          >
-            <span className="material-symbols-outlined text-lg">close</span>
-          </button>
-        )}
-        
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
-      </div>
+    <>
+      <div 
+        className="group relative glass rounded-xl overflow-hidden border-2 border-surface-variant hover:border-primary/50 transition-all"
+      >
+        {/* Page Preview */}
+        <div className="aspect-[3/4] bg-surface flex items-center justify-center relative overflow-hidden">
+          {page.thumbnail ? (
+            <>
+              <img 
+                src={page.thumbnail} 
+                alt={`עמוד ${page.number}`}
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs font-bold z-10">
+                {page.number}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="material-symbols-outlined text-6xl text-on-surface/20">
+                  description
+                </span>
+              </div>
+              <div className="absolute top-2 left-2 bg-black/70 text-white px-2 py-1 rounded text-xs font-bold z-10">
+                {page.number}
+              </div>
+            </>
+          )}
+          
+          {/* כפתורים עליונים */}
+          <div className="absolute top-2 right-2 flex gap-1 z-20">
+            {/* כפתור עיין - תמיד מוצג */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                e.preventDefault()
+                setShowPreview(true)
+              }}
+              className="bg-white/80 hover:bg-white text-gray-700 p-1.5 rounded shadow-sm transition-all cursor-pointer opacity-0 group-hover:opacity-100"
+              title="עיין בעמוד"
+              type="button"
+            >
+              <span className="material-symbols-outlined text-base">visibility</span>
+            </button>
+            
+            {/* כפתור שחרור - רק למי שתפס */}
+            {page.status === 'in-progress' && isClaimedByMe && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  e.preventDefault()
+                  onRelease(page.number)
+                }}
+                className="bg-red-600 hover:bg-red-700 text-white p-1.5 rounded shadow-sm transition-all cursor-pointer"
+                title="שחרר עמוד"
+                type="button"
+              >
+                <span className="material-symbols-outlined text-base">close</span>
+              </button>
+            )}
+          </div>
+          
+          <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
+        </div>
 
       {/* Page Info */}
       <div className="p-3">
@@ -562,6 +581,50 @@ function PageCard({ page, onClaim, onComplete, onRelease, currentUser, bookPath 
         )}
       </div>
     </div>
+
+      {/* Preview Dialog */}
+      {showPreview && (
+        <div 
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-50 overflow-auto"
+          onClick={() => setShowPreview(false)}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}
+        >
+          <div className="relative max-w-7xl w-full flex flex-col items-center p-4 my-auto" onClick={(e) => e.stopPropagation()}>
+            {/* Header Bar */}
+            <div className="flex items-center justify-between w-full mb-2 px-2">
+              <button
+                onClick={() => setShowPreview(false)}
+                className="flex items-center gap-1 text-gray-700 hover:text-gray-900 bg-white/90 px-3 py-1.5 rounded-lg shadow-sm transition-colors text-sm"
+              >
+                <span className="material-symbols-outlined text-lg">close</span>
+                <span>סגור</span>
+              </button>
+              <div className="bg-white/90 px-3 py-1.5 rounded-lg shadow-sm text-gray-700 text-sm font-medium">
+                עמוד {page.number}
+              </div>
+            </div>
+
+            {/* Image */}
+            {page.thumbnail ? (
+              <img 
+                src={page.thumbnail} 
+                alt={`עמוד ${page.number}`}
+                className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl bg-white"
+              />
+            ) : (
+              <div className="flex items-center justify-center min-h-[400px] bg-white rounded-lg shadow-2xl w-full">
+                <div className="text-center">
+                  <span className="material-symbols-outlined text-9xl text-gray-300 block mb-4">
+                    description
+                  </span>
+                  <p className="text-gray-500">אין תמונה זמינה</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 
