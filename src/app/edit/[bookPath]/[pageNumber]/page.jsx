@@ -34,6 +34,7 @@ export default function EditPage() {
   const [leftColumnName, setLeftColumnName] = useState('חלק 2')
   const [splitMode, setSplitMode] = useState('content') // 'content' או 'visual'
   const [isContentSplit, setIsContentSplit] = useState(false) // האם זה פיצול תוכן אמיתי
+  const [imageZoom, setImageZoom] = useState(100) // אחוז זום של התמונה
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -520,16 +521,42 @@ export default function EditPage() {
         </div>
       </header>
 
-      {/* Main Content - Single Container */}
-      <div className="flex-1 flex flex-col overflow-hidden p-6">
-        <div className="glass-strong rounded-xl border border-surface-variant flex-1 flex flex-col overflow-hidden">
-          
-          {/* Unified Toolbar */}
-          <div className="bg-primary/10 px-4 py-3 border-b border-surface-variant">
+      {/* Unified Toolbar - Fixed */}
+      <div className="glass-strong border-b border-surface-variant sticky top-16 z-30">
+        <div className="container mx-auto px-4 py-3">
+          <div className="bg-primary/10 px-4 py-3 rounded-lg">
             <div className="flex items-center justify-between gap-4">
               {/* Left Side - Image Tools */}
               <div className="flex items-center gap-3">
                 <span className="text-sm text-on-surface/60">עמוד {pageNumber} מתוך {bookData?.totalPages}</span>
+                
+                <div className="w-px h-6 bg-surface-variant"></div>
+
+                {/* Zoom Controls */}
+                <div className="flex items-center gap-1 bg-white/50 rounded-lg px-2 py-1">
+                  <button
+                    onClick={() => setImageZoom(Math.max(25, imageZoom - 10))}
+                    className="p-1 hover:bg-white rounded transition-colors"
+                    title="הקטן תמונה"
+                  >
+                    <span className="material-symbols-outlined text-lg">zoom_out</span>
+                  </button>
+                  <span className="text-xs font-bold min-w-[2.5rem] text-center">{imageZoom}%</span>
+                  <button
+                    onClick={() => setImageZoom(Math.min(300, imageZoom + 10))}
+                    className="p-1 hover:bg-white rounded transition-colors"
+                    title="הגדל תמונה"
+                  >
+                    <span className="material-symbols-outlined text-lg">zoom_in</span>
+                  </button>
+                  <button
+                    onClick={() => setImageZoom(100)}
+                    className="p-1 hover:bg-white rounded transition-colors text-xs font-bold"
+                    title="איפוס זום"
+                  >
+                    100%
+                  </button>
+                </div>
                 
                 <div className="w-px h-6 bg-surface-variant"></div>
                 
@@ -675,23 +702,36 @@ export default function EditPage() {
               </div>
             </div>
           </div>
+        </div>
+      </div>
 
-
+      {/* Main Content - Single Container */}
+      <div className="flex-1 flex flex-col overflow-hidden p-6">
+        <div className="glass-strong rounded-xl border border-surface-variant flex-1 flex flex-col overflow-hidden">
           {/* Split Content Area */}
           <div className="flex-1 flex overflow-hidden">
             {/* Image Side */}
             <div className="w-1/2 overflow-auto p-4 border-l border-surface-variant">
               {thumbnailUrl ? (
-                <img 
-                  src={thumbnailUrl} 
-                  alt={`עמוד ${pageNumber}`}
-                  className="w-full h-auto rounded-lg shadow-lg"
-                  onError={(e) => {
-                    console.error('Failed to load image:', thumbnailUrl)
-                    e.target.style.display = 'none'
-                    e.target.nextSibling.style.display = 'flex'
-                  }}
-                />
+                <div className="inline-block">
+                  <img 
+                    src={thumbnailUrl} 
+                    alt={`עמוד ${pageNumber}`}
+                    className="rounded-lg shadow-lg transition-all duration-200"
+                    style={{ 
+                      transform: `scale(${imageZoom / 100})`,
+                      transformOrigin: 'top right',
+                      maxWidth: 'none',
+                      width: 'auto',
+                      height: 'auto'
+                    }}
+                    onError={(e) => {
+                      console.error('Failed to load image:', thumbnailUrl)
+                      e.target.style.display = 'none'
+                      e.target.parentElement.nextSibling.style.display = 'flex'
+                    }}
+                  />
+                </div>
               ) : null}
               <div 
                 className="flex items-center justify-center min-h-full bg-surface rounded-lg"
