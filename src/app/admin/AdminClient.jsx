@@ -23,6 +23,11 @@ export default function AdminClient({ session }) {
     const [messages, setMessages] = useState([])
     const [selectedMessage, setSelectedMessage] = useState(null)
     const [replyText, setReplyText] = useState('')
+    const [showSendMessageDialog, setShowSendMessageDialog] = useState(false)
+    const [newMessageRecipient, setNewMessageRecipient] = useState('all')
+    const [newMessageSubject, setNewMessageSubject] = useState('')
+    const [newMessageText, setNewMessageText] = useState('')
+    const [sendingNewMessage, setSendingNewMessage] = useState(false)
 
     useEffect(() => {
         loadData()
@@ -184,6 +189,44 @@ export default function AdminClient({ session }) {
         } catch (error) {
             console.error('Error deleting message:', error)
             alert('שגיאה במחיקת הודעה')
+        }
+    }
+
+    const handleSendNewMessage = async () => {
+        if (!newMessageSubject.trim() || !newMessageText.trim()) {
+            alert('נא למלא את כל השדות')
+            return
+        }
+
+        try {
+            setSendingNewMessage(true)
+            const response = await fetch('/api/messages/send-admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    recipientId: newMessageRecipient === 'all' ? null : newMessageRecipient,
+                    subject: newMessageSubject,
+                    message: newMessageText,
+                    sendToAll: newMessageRecipient === 'all'
+                })
+            })
+
+            const result = await response.json()
+            if (result.success) {
+                alert(result.message)
+                setNewMessageSubject('')
+                setNewMessageText('')
+                setNewMessageRecipient('all')
+                setShowSendMessageDialog(false)
+                loadMessages()
+            } else {
+                alert(result.error || 'שגיאה בשליחת הודעה')
+            }
+        } catch (error) {
+            console.error('Error sending message:', error)
+            alert('שגיאה בשליחת הודעה')
+        } finally {
+            setSendingNewMessage(false)
         }
     }
 
@@ -1008,7 +1051,16 @@ export default function AdminClient({ session }) {
 
                         {activeTab === 'messages' && (
                             <div className="glass-strong p-6 rounded-xl">
-                                <h2 className="text-2xl font-bold mb-6 text-on-surface">הודעות משתמשים</h2>
+                                <div className="flex items-center justify-between mb-6">
+                                    <h2 className="text-2xl font-bold text-on-surface">הודעות משתמשים</h2>
+                                    <button
+                                        onClick={() => setShowSendMessageDialog(true)}
+                                        className="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg hover:bg-accent transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined">send</span>
+                                        <span>שלח הודעה חדשה</span>
+                                    </button>
+                                </div>
                                 {messages.length === 0 ? (
                                     <div className="text-center py-12">
                                         <span className="material-symbols-outlined text-6xl text-on-surface/30 mb-4">
@@ -1245,6 +1297,82 @@ export default function AdminClient({ session }) {
                                 }}
                                 disabled={addingBook}
                                 className="flex-1 px-4 py-3 glass rounded-lg hover:bg-surface-variant transition-colors disabled:opacity-50"
+                            >
+                                ביטול
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Send Message Dialog */}
+            {showSendMessageDialog && (
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                    <div className="glass-strong p-8 rounded-2xl max-w-2xl w-full">
+                        <h3 className="text-2xl font-bold mb-6 text-on-surface flex items-center gap-3">
+                            <span className="material-symbols-outlined text-3xl text-primary">send</span>
+                            שלח הודעה למשתמשים
+                        </h3>
+                        
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-on-surface mb-2">נמען</label>
+                                <select
+                                    value={newMessageRecipient}
+                                    onChange={(e) => setNewMessageRecipient(e.target.value)}
+                                    className="w-full px-4 py-3 border border-surface-variant rounded-lg focus:outline-none focus:border-primary bg-white text-on-surface"
+                                    disabled={sendingNewMessage}
+                                >
+                                    <option value="all">כל המשתמשים</option>
+                                    {users.filter(u => u.role !== 'admin').map(user => (
+                                        <option key={user.id} value={user.id}>{user.name} ({user.email})</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-on-surface mb-2">נושא</label>
+                                <input
+                                    type="text"
+                                    value={newMessageSubject}
+                                    onChange={(e) => setNewMessageSubject(e.target.value)}
+                                    placeholder="נושא ההודעה..."
+                                    className="w-full px-4 py-3 border border-surface-variant rounded-lg focus:outline-none focus:border-primary bg-white text-on-surface"
+                                    disabled={sendingNewMessage}
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-on-surface mb-2">הודעה</label>
+                                <textarea
+                                    value={newMessageText}
+                                    onChange={(e) => setNewMessageText(e.target.value)}
+                                    placeholder="כתוב את ההודעה שלך כאן..."
+                                    className="w-full px-4 py-3 border border-surface-variant rounded-lg focus:outline-none focus:border-primary bg-white text-on-surface"
+                                    rows="8"
+                                    disabled={sendingNewMessage}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                onClick={handleSendNewMessage}
+                                disabled={sendingNewMessage}
+                                className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-primary text-on-primary rounded-lg hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <span className="material-symbols-outlined">send</span>
+                                <span>{sendingNewMessage ? 'שולח...' : 'שלח הודעה'}</span>
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setShowSendMessageDialog(false)
+                                    setNewMessageSubject('')
+                                    setNewMessageText('')
+                                    setNewMessageRecipient('all')
+                                }}
+                                disabled={sendingNewMessage}
+                                className="px-6 py-3 glass rounded-lg hover:bg-surface-variant transition-colors disabled:opacity-50"
                             >
                                 ביטול
                             </button>
