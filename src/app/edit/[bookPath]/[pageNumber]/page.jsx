@@ -356,6 +356,10 @@ export default function EditPage() {
       return
     }
     
+    // שמור את מיקום הגלילה הנוכחי
+    const scrollTop = textarea.scrollTop
+    const scrollLeft = textarea.scrollLeft
+    
     const start = textarea.selectionStart || 0
     const end = textarea.selectionEnd || 0
     const selectedText = currentText.substring(start, end)
@@ -408,11 +412,14 @@ export default function EditPage() {
       debouncedSave(newText, leftColumn, rightColumn, twoColumns)
     }
     
-    // החזר פוקוס ל-textarea
+    // החזר פוקוס ל-textarea ושמור את מיקום הגלילה
     setTimeout(() => {
       textarea.focus()
       const newCursorPos = start + insertedText.length
       textarea.setSelectionRange(newCursorPos, newCursorPos)
+      // שחזר את מיקום הגלילה
+      textarea.scrollTop = scrollTop
+      textarea.scrollLeft = scrollLeft
     }, 0)
   }
 
