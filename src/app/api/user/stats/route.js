@@ -43,10 +43,13 @@ export async function GET(request) {
       const bookName = file.pathname.split('/').pop().replace('.json', '')
       
       try {
-        const response = await fetch(file.url)
-        if (!response.ok) continue
+        // קרא ישירות מ-MongoDB במקום fetch
+        const pages = await readJSON(file.pathname)
         
-        const pages = await response.json()
+        if (!pages || !Array.isArray(pages)) {
+          console.warn(`No valid pages data for ${bookName}`)
+          continue
+        }
 
         pages.forEach(page => {
           if (page.claimedById === userId) {
@@ -61,10 +64,16 @@ export async function GET(request) {
             // הוסף לפעילות אחרונה
             recentActivity.push({
               bookName,
+              bookPath: bookName,
               pageNumber: page.number,
               status: page.status,
               claimedAt: page.claimedAt,
-              completedAt: page.completedAt
+              completedAt: page.completedAt,
+              date: new Date(page.completedAt || page.claimedAt).toLocaleDateString('he-IL', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric'
+              })
             })
           }
         })
