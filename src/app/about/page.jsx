@@ -42,11 +42,11 @@ export default function AboutOtzariaPage() {
   ]
 
   const organizations = [
-    { name: 'ספריא', logo: '/otzaria-site-main/images/safria logo.png', url: 'https://www.sefaria.org/texts' },
-    { name: 'דיקטה', logo: '/otzaria-site-main/images/dicta_logo.jpg', url: 'https://github.com/Dicta-Israel-Center-for-Text-Analysis/Dicta-Library-Download' },
-    { name: 'אורייתא', logo: '/otzaria-site-main/images/Orayta.png', url: 'https://github.com/MosheWagner/Orayta-Books' },
-    { name: 'ובלכתך בדרך', logo: '/otzaria-site-main/images/OnYourWay_logo.jpg', url: 'http://mobile.tora.ws' },
-    { name: 'תורת אמת', logo: '/otzaria-site-main/images/toratemet.png', url: 'http://www.toratemetfreeware.com/index.html?downloads;1;' }
+    { name: 'ספריא', logo: 'https://raw.githubusercontent.com/Y-PLONI/otzaria/main/images/safria%20logo.png', url: 'https://www.sefaria.org/texts' },
+    { name: 'דיקטה', logo: 'https://raw.githubusercontent.com/Y-PLONI/otzaria/main/images/dicta_logo.jpg', url: 'https://github.com/Dicta-Israel-Center-for-Text-Analysis/Dicta-Library-Download' },
+    { name: 'אורייתא', logo: 'https://raw.githubusercontent.com/Y-PLONI/otzaria/main/images/Orayta.png', url: 'https://github.com/MosheWagner/Orayta-Books' },
+    { name: 'ובלכתך בדרך', logo: 'https://raw.githubusercontent.com/Y-PLONI/otzaria/main/images/OnYourWay_logo.jpg', url: 'http://mobile.tora.ws' },
+    { name: 'תורת אמת', logo: 'https://raw.githubusercontent.com/Y-PLONI/otzaria/main/images/toratemet.png', url: 'http://www.toratemetfreeware.com/index.html?downloads;1;' }
   ]
 
   return (
@@ -64,7 +64,7 @@ export default function AboutOtzariaPage() {
             {/* Header */}
             <div className="flex items-center gap-6 mb-8 flex-col md:flex-row text-center md:text-right">
               <img
-                src="/otzaria-site-main/images/logo.svg"
+                src="/logo.png"
                 alt="לוגו אוצריא"
                 className="rounded-xl w-24 h-24"
               />

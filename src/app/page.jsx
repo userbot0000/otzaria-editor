@@ -283,9 +283,9 @@ export default function HomePage() {
           portable: '#'
         }}
         devLinks={{
-          msix: 'https://github.com/Y-PLONI/otzaria/releases/download/0.9.66%2B97/otzaria.msix',
-          exe: 'https://github.com/Y-PLONI/otzaria/releases/download/0.9.66%2B97/otzaria-0.9.66-windows.exe',
-          portable: 'https://github.com/Y-PLONI/otzaria/releases/download/0.9.66%2B97/otzaria-windows.zip'
+          msix: 'https://github.com/Y-PLONI/otzaria/releases/latest/download/otzaria.msix',
+          exe: 'https://github.com/Y-PLONI/otzaria/releases/latest/download/otzaria-windows.exe',
+          portable: 'https://github.com/Y-PLONI/otzaria/releases/latest/download/otzaria-windows.zip'
         }}
       />
 
@@ -297,7 +297,7 @@ export default function HomePage() {
           deb: 'https://github.com/Sivan22/otzaria/releases'
         }}
         devLinks={{
-          deb: 'https://github.com/Y-PLONI/otzaria/releases/download/0.9.66%2B97/otzaria-0.9.66-linux.deb'
+          deb: 'https://github.com/Y-PLONI/otzaria/releases/latest/download/otzaria-linux.deb'
         }}
       />
 
@@ -309,7 +309,7 @@ export default function HomePage() {
           playStore: 'https://play.google.com/store/apps/details?id=com.mendelg.otzaria'
         }}
         devLinks={{
-          apk: 'https://github.com/Y-PLONI/otzaria/releases/download/0.9.66%2B97/app-release.apk'
+          apk: 'https://github.com/Y-PLONI/otzaria/releases/latest/download/app-release.apk'
         }}
       />
 
@@ -321,7 +321,7 @@ export default function HomePage() {
           zip: 'https://github.com/Sivan22/otzaria/releases'
         }}
         devLinks={{
-          zip: 'https://github.com/Y-PLONI/otzaria/releases/download/0.9.66%2B97/otzaria-macos.zip'
+          zip: 'https://github.com/Y-PLONI/otzaria/releases/latest/download/otzaria-macos.zip'
         }}
       />
 
