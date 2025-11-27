@@ -22,8 +22,46 @@ export default function RegisterPage() {
     setError('')
     setLoading(true)
 
+    // בדיקות ולידציה מקדימות
+    if (!formData.name.trim()) {
+      setError('נא להזין שם משתמש')
+      setLoading(false)
+      return
+    }
+
+    if (formData.name.length < 2) {
+      setError('שם המשתמש חייב להכיל לפחות 2 תווים')
+      setLoading(false)
+      return
+    }
+
+    if (formData.name.length > 50) {
+      setError('שם המשתמש ארוך מדי (מקסימום 50 תווים)')
+      setLoading(false)
+      return
+    }
+
+    if (!formData.email.trim()) {
+      setError('נא להזין כתובת אימייל')
+      setLoading(false)
+      return
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(formData.email)) {
+      setError('כתובת האימייל אינה תקינה')
+      setLoading(false)
+      return
+    }
+
+    if (formData.password.length < 6) {
+      setError('הסיסמה חייבת להכיל לפחות 6 תווים')
+      setLoading(false)
+      return
+    }
+
     if (formData.password !== formData.confirmPassword) {
-      setError('הסיסמאות אינן תואמות')
+      setError('הסיסמאות אינן תואמות - נא לוודא שהזנת את אותה סיסמה פעמיים')
       setLoading(false)
       return
     }
@@ -39,7 +77,18 @@ export default function RegisterPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'שגיאה בהרשמה')
+        // הודעות שגיאה מפורטות מהשרת
+        if (data.error) {
+          setError(data.error)
+        } else if (response.status === 400) {
+          setError('הנתונים שהוזנו אינם תקינים, נא לבדוק ולנסות שוב')
+        } else if (response.status === 500) {
+          setError('שגיאת שרת - נא לנסות שוב מאוחר יותר')
+        } else {
+          setError('שגיאה בהרשמה - נא לנסות שוב')
+        }
+        setLoading(false)
+        return
       }
 
       // שלב 2: התחברות אוטומטית
@@ -57,7 +106,8 @@ export default function RegisterPage() {
         router.push('/dashboard')
       }
     } catch (err) {
-      setError(err.message)
+      console.error('Registration error:', err)
+      setError('שגיאה בהרשמה - נא לבדוק את החיבור לאינטרנט ולנסות שוב')
       setLoading(false)
     }
   }
@@ -81,9 +131,23 @@ export default function RegisterPage() {
           </p>
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 text-red-700">
-              <span className="material-symbols-outlined">error</span>
-              <span>{error}</span>
+            <div className="mb-6 p-4 bg-red-50 border-2 border-red-300 rounded-lg animate-shake">
+              <div className="flex items-start gap-3">
+                <span className="material-symbols-outlined text-red-600 text-2xl flex-shrink-0">
+                  error
+                </span>
+                <div className="flex-1">
+                  <h3 className="font-bold text-red-800 mb-1">שגיאה בהרשמה</h3>
+                  <p className="text-red-700 text-sm">{error}</p>
+                </div>
+                <button
+                  onClick={() => setError('')}
+                  className="text-red-400 hover:text-red-600 transition-colors"
+                  type="button"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
             </div>
           )}
 
