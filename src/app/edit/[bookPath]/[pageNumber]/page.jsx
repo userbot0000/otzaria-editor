@@ -39,6 +39,7 @@ export default function EditPage() {
   const [selectionStart, setSelectionStart] = useState(null) // נקודת התחלה של הבחירה
   const [selectionEnd, setSelectionEnd] = useState(null) // נקודת סיום של הבחירה
   const [selectionRect, setSelectionRect] = useState(null) // מלבן הבחירה הסופי
+  const [ocrMethod, setOcrMethod] = useState('tesseract') // 'tesseract' או 'gemini'
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -369,6 +370,40 @@ export default function EditPage() {
     setSelectionRect(null)
   }
 
+  const handleGeminiOCR = async (croppedBlob) => {
+    // המר את ה-blob ל-base64
+    const reader = new FileReader()
+    const base64Promise = new Promise((resolve) => {
+      reader.onloadend = () => {
+        const base64 = reader.result.split(',')[1] // הסר את "data:image/jpeg;base64,"
+        resolve(base64)
+      }
+      reader.readAsDataURL(croppedBlob)
+    })
+    
+    const imageBase64 = await base64Promise
+    
+    // שלח ל-API
+    const response = await fetch('/api/gemini-ocr', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ 
+        imageBase64,
+        model: 'gemini-2.5-flash'
+      })
+    })
+    
+    const result = await response.json()
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Gemini OCR failed')
+    }
+    
+    return result.text
+  }
+
   const handleOCRSelection = async () => {
     if (!selectionRect) {
       alert('❌ אנא בחר אזור בתמונה תחילה')
@@ -378,7 +413,7 @@ export default function EditPage() {
     setIsOcrProcessing(true)
     
     try {
-      const Tesseract = (await import('tesseract.js')).default
+      const methodName = ocrMethod === 'gemini' ? 'Gemini AI' : 'Tesseract OCR'
       
       const progressDiv = document.createElement('div')
       progressDiv.id = 'ocr-progress'
@@ -420,24 +455,35 @@ export default function EditPage() {
         canvas.toBlob(resolve, 'image/jpeg', 0.95)
       })
 
-      // הרץ OCR על האזור החתוך
-      const result = await Tesseract.recognize(
-        croppedBlob,
-        'heb',
-        {
-          logger: (m) => {
-            if (m.status === 'recognizing text') {
-              const percent = Math.round(m.progress * 100)
-              const percentEl = document.getElementById('ocr-percent')
-              if (percentEl) percentEl.textContent = `${percent}%`
+      let extractedText = ''
+
+      // הרץ OCR לפי השיטה שנבחרה
+      if (ocrMethod === 'gemini') {
+        // Gemini AI
+        progressDiv.querySelector('span:last-child').innerHTML = `מעבד ${methodName}... <span id="ocr-percent">⏳</span>`
+        extractedText = await handleGeminiOCR(croppedBlob)
+      } else {
+        // Tesseract OCR
+        const Tesseract = (await import('tesseract.js')).default
+        const result = await Tesseract.recognize(
+          croppedBlob,
+          'heb',
+          {
+            logger: (m) => {
+              if (m.status === 'recognizing text') {
+                const percent = Math.round(m.progress * 100)
+                const percentEl = document.getElementById('ocr-percent')
+                if (percentEl) percentEl.textContent = `${percent}%`
+              }
             }
           }
-        }
-      )
+        )
+        extractedText = result.data.text.trim()
+      }
 
       progressDiv.remove()
 
-      const extractedText = result.data.text.trim()
+      extractedText = extractedText.trim()
       
       if (!extractedText) {
         alert('⚠️ לא זוהה טקסט באזור הנבחר')
@@ -479,8 +525,7 @@ export default function EditPage() {
     setIsOcrProcessing(true)
     
     try {
-      // ייבוא Tesseract רק כשצריך
-      const Tesseract = (await import('tesseract.js')).default
+      const methodName = ocrMethod === 'gemini' ? 'Gemini AI' : 'Tesseract OCR'
       
       // הצג הודעת התקדמות
       const progressDiv = document.createElement('div')
@@ -488,47 +533,49 @@ export default function EditPage() {
       progressDiv.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-primary text-on-primary px-6 py-3 rounded-lg shadow-lg z-50 flex items-center gap-3'
       progressDiv.innerHTML = `
         <span class="material-symbols-outlined animate-spin">progress_activity</span>
-        <span>מעבד OCR... <span id="ocr-percent">0%</span></span>
+        <span>מעבד ${methodName}... <span id="ocr-percent">0%</span></span>
       `
       document.body.appendChild(progressDiv)
 
-      // טען את התמונה דרך proxy כדי לעקוף CORS
-      let imageToProcess = thumbnailUrl
+      // טען את התמונה דרך proxy
+      const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(thumbnailUrl)}`
+      const response = await fetch(proxyUrl)
       
-      // אם זה URL חיצוני (GitHub), השתמש ב-proxy שלנו
-      if (thumbnailUrl.startsWith('http://') || thumbnailUrl.startsWith('https://')) {
-        // השתמש ב-API proxy שלנו כדי לעקוף CORS
-        const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(thumbnailUrl)}`
-        
-        const response = await fetch(proxyUrl)
-        
-        if (!response.ok) {
-          throw new Error('Failed to load image via proxy')
-        }
-        
-        const blob = await response.blob()
-        imageToProcess = blob
+      if (!response.ok) {
+        throw new Error('Failed to load image via proxy')
       }
+      
+      const blob = await response.blob()
+      let extractedText = ''
 
-      // הרץ OCR
-      const result = await Tesseract.recognize(
-        imageToProcess,
-        'heb', // עברית
-        {
-          logger: (m) => {
-            if (m.status === 'recognizing text') {
-              const percent = Math.round(m.progress * 100)
-              const percentEl = document.getElementById('ocr-percent')
-              if (percentEl) percentEl.textContent = `${percent}%`
+      // הרץ OCR לפי השיטה שנבחרה
+      if (ocrMethod === 'gemini') {
+        // Gemini AI
+        progressDiv.querySelector('span:last-child').innerHTML = `מעבד ${methodName}... <span id="ocr-percent">⏳</span>`
+        extractedText = await handleGeminiOCR(blob)
+      } else {
+        // Tesseract OCR
+        const Tesseract = (await import('tesseract.js')).default
+        const result = await Tesseract.recognize(
+          blob,
+          'heb',
+          {
+            logger: (m) => {
+              if (m.status === 'recognizing text') {
+                const percent = Math.round(m.progress * 100)
+                const percentEl = document.getElementById('ocr-percent')
+                if (percentEl) percentEl.textContent = `${percent}%`
+              }
             }
           }
-        }
-      )
+        )
+        extractedText = result.data.text.trim()
+      }
 
       // הסר הודעת התקדמות
       progressDiv.remove()
 
-      const extractedText = result.data.text.trim()
+      extractedText = extractedText.trim()
       
       if (!extractedText) {
         alert('⚠️ לא זוהה טקסט בתמונה')
@@ -546,11 +593,11 @@ export default function EditPage() {
         debouncedSave(extractedText, leftColumn, rightColumn, twoColumns)
       }
 
-      alert(`✅ OCR הושלם בהצלחה!\nזוהו ${extractedText.length} תווים`)
+      alert(`✅ ${methodName} הושלם בהצלחה!\nזוהו ${extractedText.length} תווים`)
       
     } catch (error) {
       console.error('OCR Error:', error)
-      alert('❌ שגיאה בעיבוד OCR: ' + error.message)
+      alert(`❌ שגיאה בעיבוד ${methodName}: ` + error.message)
       
       // הסר הודעת התקדמות במקרה של שגיאה
       const progressDiv = document.getElementById('ocr-progress')
@@ -746,107 +793,125 @@ export default function EditPage() {
       </header>
 
       {/* Unified Toolbar - Fixed */}
-      <div className="glass-strong border-b border-surface-variant sticky top-16 z-30">
-        <div className="container mx-auto px-4 py-3">
-          <div className="bg-primary/10 px-4 py-3 rounded-lg">
-            <div className="flex items-center justify-between gap-4">
-              {/* Left Side - Image Tools */}
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-on-surface/60">עמוד {pageNumber} מתוך {bookData?.totalPages}</span>
-                
-                <div className="w-px h-6 bg-surface-variant"></div>
+      <div className="bg-white border-b border-gray-200 sticky top-16 z-30 shadow-sm">
+        <div className="container mx-auto px-4 py-2.5">
+          <div className="flex items-center justify-between gap-3">
+            {/* Left Side - Image Tools */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 font-medium">עמוד {pageNumber} מתוך {bookData?.totalPages}</span>
+              
+              <div className="w-px h-6 bg-gray-200"></div>
 
-                {/* Zoom Controls */}
-                <div className="flex items-center gap-1 bg-white/50 rounded-lg px-2 py-1">
-                  <button
-                    onClick={() => setImageZoom(Math.max(25, imageZoom - 10))}
-                    className="p-1 hover:bg-white rounded transition-colors"
-                    title="הקטן תמונה"
-                  >
-                    <span className="material-symbols-outlined text-lg">zoom_out</span>
-                  </button>
-                  <span className="text-xs font-bold min-w-[2.5rem] text-center">{imageZoom}%</span>
-                  <button
-                    onClick={() => setImageZoom(Math.min(300, imageZoom + 10))}
-                    className="p-1 hover:bg-white rounded transition-colors"
-                    title="הגדל תמונה"
-                  >
-                    <span className="material-symbols-outlined text-lg">zoom_in</span>
-                  </button>
-                  <button
-                    onClick={() => setImageZoom(100)}
-                    className="p-1 hover:bg-white rounded transition-colors text-xs font-bold"
-                    title="איפוס זום"
-                  >
-                    100%
-                  </button>
-                </div>
-                
-                <div className="w-px h-6 bg-surface-variant"></div>
-                
+              {/* Zoom Controls */}
+              <div className="flex items-center gap-0 bg-gray-100 rounded-lg p-0.5">
                 <button
-                  onClick={handleOCR}
-                  disabled={isOcrProcessing || !thumbnailUrl}
-                  className="flex items-center gap-1 p-2 hover:bg-white rounded transition-colors border border-transparent hover:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="זיהוי טקסט אוטומטי מהתמונה המלאה (OCR)"
+                  onClick={() => setImageZoom(Math.max(25, imageZoom - 10))}
+                  className="w-8 h-8 hover:bg-white rounded-md transition-colors flex items-center justify-center"
+                  title="הקטן תמונה"
                 >
-                  <span className={`material-symbols-outlined text-lg ${isOcrProcessing ? 'animate-spin' : ''}`}>
-                    {isOcrProcessing ? 'progress_activity' : 'text_fields'}
-                  </span>
-                  {isOcrProcessing && <span className="text-sm">מעבד...</span>}
+                  <span className="material-symbols-outlined text-base">zoom_out</span>
                 </button>
-
+                <span className="text-xs font-medium min-w-[2.5rem] text-center text-gray-700">{imageZoom}%</span>
                 <button
-                  onClick={toggleSelectionMode}
-                  disabled={isOcrProcessing || !thumbnailUrl}
-                  className={`flex items-center gap-1 p-2 rounded transition-colors border disabled:opacity-50 disabled:cursor-not-allowed ${
-                    isSelectionMode 
-                      ? 'bg-blue-500 text-white border-blue-600' 
-                      : 'hover:bg-white border-transparent hover:border-primary'
+                  onClick={() => setImageZoom(Math.min(300, imageZoom + 10))}
+                  className="w-8 h-8 hover:bg-white rounded-md transition-colors flex items-center justify-center"
+                  title="הגדל תמונה"
+                >
+                  <span className="material-symbols-outlined text-base">zoom_in</span>
+                </button>
+                <button
+                  onClick={() => setImageZoom(100)}
+                  className="w-12 h-8 hover:bg-white rounded-md transition-colors text-xs font-medium flex items-center justify-center"
+                  title="איפוס זום"
+                >
+                  100%
+                </button>
+              </div>
+              
+              <div className="w-px h-6 bg-gray-200"></div>
+
+              {/* OCR Method Selector */}
+              <div className="flex items-center gap-0 bg-gray-100 rounded-lg p-0.5">
+                <button
+                  onClick={() => setOcrMethod('tesseract')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-150 flex items-center gap-1.5 h-8 ${
+                    ocrMethod === 'tesseract' 
+                      ? 'bg-white text-gray-900 shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-900'
                   }`}
-                  title="בחר אזור בתמונה לזיהוי טקסט (כמו Google Lens)"
+                  title="Tesseract OCR - מהיר, עובד אופליין"
                 >
-                  <span className="material-symbols-outlined text-lg">
-                    crop_free
-                  </span>
-                  {isSelectionMode && <span className="text-sm">בחר אזור</span>}
+                  <span className="material-symbols-outlined text-base">text_fields</span>
+                  <span>OCR</span>
                 </button>
+                <button
+                  onClick={() => setOcrMethod('gemini')}
+                  className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-150 flex items-center gap-1.5 h-8 ${
+                    ocrMethod === 'gemini' 
+                      ? 'bg-white text-gray-900 shadow-sm' 
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                  title="Gemini AI - מדויק יותר"
+                >
+                  <img 
+                    src="https://www.gstatic.com/lamda/images/gemini_sparkle_v002_d4735304ff6292a690345.svg" 
+                    alt="Gemini" 
+                    className="w-3.5 h-3.5"
+                  />
+                  <span>Gemini</span>
+                </button>
+              </div>
+              
+              <button
+                onClick={toggleSelectionMode}
+                disabled={isOcrProcessing || !thumbnailUrl}
+                className={`w-8 h-8 rounded-lg border transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center ${
+                  isSelectionMode 
+                    ? 'bg-blue-50 text-blue-700 border-blue-200' 
+                    : 'bg-white hover:bg-gray-50 text-gray-700 border-gray-200'
+                }`}
+                title={`זיהוי טקסט מאזור נבחר (${ocrMethod === 'gemini' ? 'Gemini AI' : 'Tesseract OCR'})`}
+              >
+                <span className={`material-symbols-outlined text-base ${isOcrProcessing ? 'animate-spin' : ''}`}>
+                  {isOcrProcessing ? 'progress_activity' : 'document_scanner'}
+                </span>
+              </button>
 
-                {selectionRect && (
-                  <>
-                    <button
-                      onClick={handleOCRSelection}
-                      disabled={isOcrProcessing}
-                      className="flex items-center gap-1 p-2 bg-green-500 text-white rounded transition-colors border border-green-600 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed animate-pulse"
-                      title="זהה טקסט באזור הנבחר"
+              {selectionRect && (
+                <>
+                  <button
+                    onClick={handleOCRSelection}
+                    disabled={isOcrProcessing}
+                    className="flex items-center gap-2 px-3 py-1.5 h-8 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="זהה טקסט באזור הנבחר"
                     >
-                      <span className="material-symbols-outlined text-lg">
+                      <span className="material-symbols-outlined text-base">
                         check_circle
                       </span>
-                      <span className="text-sm font-bold">זהה אזור</span>
+                      <span className="text-xs font-medium">זהה אזור</span>
                     </button>
                     <button
                       onClick={() => {
                         setSelectionRect(null)
                         setIsSelectionMode(false)
                       }}
-                      className="flex items-center gap-1 p-2 bg-red-500 text-white rounded transition-colors border border-red-600 hover:bg-red-600"
+                      className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-all duration-150"
                       title="בטל בחירה"
                     >
-                      <span className="material-symbols-outlined text-lg">
+                      <span className="material-symbols-outlined text-base">
                         close
                       </span>
                     </button>
                   </>
                 )}
                 
-                <div className="w-px h-6 bg-surface-variant"></div>
+                <div className="w-px h-6 bg-gray-200"></div>
                 
                 <a
                   href="https://aistudio.google.com/prompts/new_chat?model=gemini-3-pro-preview"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="p-2 hover:bg-white rounded transition-colors border border-transparent hover:border-primary flex items-center gap-1"
+                  className="p-1.5 h-8 hover:bg-gray-100 rounded-lg transition-colors flex items-center"
                   title="פתח Gemini AI"
                 >
                   <img 
@@ -861,109 +926,114 @@ export default function EditPage() {
               <div className="flex items-center gap-2 flex-wrap">
                 
                 {/* Text Formatting Buttons */}
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0 bg-gray-100 rounded-lg p-0.5">
                   <button
                     onClick={() => insertTag('b')}
-                    className="p-2 hover:bg-white rounded transition-colors border border-transparent hover:border-primary"
+                    className="w-8 h-8 hover:bg-white rounded-md transition-colors flex items-center justify-center"
                     title="מודגש"
                   >
-                    <span className="font-bold">B</span>
+                    <span className="font-bold text-sm">B</span>
                   </button>
                   <button
                     onClick={() => insertTag('i')}
-                    className="p-2 hover:bg-white rounded transition-colors border border-transparent hover:border-primary"
+                    className="w-8 h-8 hover:bg-white rounded-md transition-colors flex items-center justify-center"
                     title="נטוי"
                   >
-                    <span className="italic">I</span>
+                    <span className="italic text-sm">I</span>
                   </button>
                   <button
                     onClick={() => insertTag('u')}
-                    className="p-2 hover:bg-white rounded transition-colors border border-transparent hover:border-primary"
+                    className="w-8 h-8 hover:bg-white rounded-md transition-colors flex items-center justify-center"
                     title="קו תחתון"
                   >
-                    <span className="underline">U</span>
+                    <span className="underline text-sm">U</span>
                   </button>
                 </div>
 
-                <div className="w-px h-6 bg-surface-variant"></div>
+                <div className="w-px h-6 bg-gray-200"></div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0 bg-gray-100 rounded-lg p-0.5">
                   <button
                     onClick={() => insertTag('big')}
-                    className="p-2 hover:bg-white rounded transition-colors text-lg border border-transparent hover:border-primary"
+                    className="w-8 h-8 hover:bg-white rounded-md transition-colors flex items-center justify-center text-sm font-medium"
                     title="גדול"
                   >
                     A+
                   </button>
                   <button
                     onClick={() => insertTag('small')}
-                    className="p-2 hover:bg-white rounded transition-colors text-xs border border-transparent hover:border-primary"
+                    className="w-8 h-8 hover:bg-white rounded-md transition-colors flex items-center justify-center text-xs font-medium"
                     title="קטן"
                   >
                     A-
                   </button>
                 </div>
 
-                <div className="w-px h-6 bg-surface-variant"></div>
+                <div className="w-px h-6 bg-gray-200"></div>
 
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-0 bg-gray-100 rounded-lg p-0.5">
                   <button
                     onClick={() => insertTag('h1')}
-                    className="px-2 py-1 hover:bg-white rounded transition-colors text-sm font-bold border border-transparent hover:border-primary"
+                    className="px-2.5 h-8 hover:bg-white rounded-md transition-colors text-xs font-bold flex items-center justify-center"
                     title="כותרת 1"
                   >
                     H1
                   </button>
                   <button
                     onClick={() => insertTag('h2')}
-                    className="px-2 py-1 hover:bg-white rounded transition-colors text-sm font-bold border border-transparent hover:border-primary"
+                    className="px-2.5 h-8 hover:bg-white rounded-md transition-colors text-xs font-bold flex items-center justify-center"
                     title="כותרת 2"
                   >
                     H2
                   </button>
                   <button
                     onClick={() => insertTag('h3')}
-                    className="px-2 py-1 hover:bg-white rounded transition-colors text-sm font-bold border border-transparent hover:border-primary"
+                    className="px-2.5 h-8 hover:bg-white rounded-md transition-colors text-xs font-bold flex items-center justify-center"
                     title="כותרת 3"
                   >
                     H3
                   </button>
                 </div>
 
-                <div className="w-px h-6 bg-surface-variant"></div>
+                <div className="w-px h-6 bg-gray-200"></div>
 
                 <button
                   onClick={() => setShowFindReplace(true)}
-                  className="flex items-center gap-2 px-3 py-1.5 hover:bg-white rounded transition-colors border border-transparent hover:border-primary"
+                  className="flex items-center gap-2 px-3 py-1.5 h-8 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 transition-colors"
                   title="חיפוש והחלפה"
                 >
-                  <span className="material-symbols-outlined text-lg">find_replace</span>
-                  <span className="text-sm">חיפוש</span>
+                  <span className="material-symbols-outlined text-base">find_replace</span>
+                  <span className="text-xs font-medium">חיפוש</span>
                 </button>
 
-                <div className="w-px h-6 bg-surface-variant"></div>
+                <div className="w-px h-6 bg-gray-200"></div>
 
-                <select
-                  value={selectedFont}
-                  className="px-3 py-1.5 bg-white border-2 border-surface-variant rounded-lg text-sm focus:outline-none focus:border-primary"
-                  onChange={(e) => setSelectedFont(e.target.value)}
-                >
-                  <option value="monospace">Monospace</option>
-                  <option value="Arial">Arial</option>
-                  <option value="'Times New Roman'">Times New Roman</option>
-                  <option value="'Courier New'">Courier New</option>
-                  <option value="Georgia">Georgia</option>
-                  <option value="Verdana">Verdana</option>
-                </select>
+                <div className="relative">
+                  <select
+                    value={selectedFont}
+                    className="appearance-none pl-3 pr-8 h-8 bg-white border border-gray-200 rounded-lg text-xs font-medium focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all cursor-pointer hover:bg-gray-50"
+                    onChange={(e) => setSelectedFont(e.target.value)}
+                  >
+                    <option value="monospace">Monospace</option>
+                    <option value="Arial">Arial</option>
+                    <option value="'Times New Roman'">Times New Roman</option>
+                    <option value="'Courier New'">Courier New</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Verdana">Verdana</option>
+                  </select>
+                  <span className="material-symbols-outlined text-base absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none text-gray-500">
+                    expand_more
+                  </span>
+                </div>
 
-                <div className="w-px h-6 bg-surface-variant"></div>
+                <div className="w-px h-6 bg-gray-200"></div>
 
                 <button
                   onClick={toggleColumns}
-                  className="p-2 hover:bg-white rounded transition-colors border border-transparent hover:border-primary"
+                  className="w-8 h-8 hover:bg-gray-100 rounded-lg transition-colors flex items-center justify-center"
                   title={twoColumns ? 'שני טורים' : 'טור אחד'}
                 >
-                  <span className="material-symbols-outlined text-lg">
+                  <span className="material-symbols-outlined text-base">
                     {twoColumns ? 'view_column' : 'view_agenda'}
                   </span>
                 </button>
@@ -971,7 +1041,6 @@ export default function EditPage() {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Main Content - Single Container */}
       <div className="flex-1 flex flex-col overflow-hidden p-6">
