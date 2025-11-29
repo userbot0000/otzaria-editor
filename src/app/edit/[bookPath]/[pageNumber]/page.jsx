@@ -1588,27 +1588,15 @@ export default function EditPage() {
                   בחירת מודל
                 </label>
                 <p className="text-xs text-gray-600 mb-3">
-                  מודלים שונים מציעים איזון שונה בין מהירות, דיוק ועלות
+                  Flash - מהיר וזול | Pro - מדויק יותר אבל יקר ואיטי
                 </p>
                 <select
                   value={selectedModel}
                   onChange={(e) => setSelectedModel(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 >
-                  <optgroup label="מומלץ - מהיר וזול">
-                    <option value="gemini-2.5-flash">Gemini 2.5 Flash (מומלץ)</option>
-                    <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
-                    <option value="gemini-flash-latest">Gemini Flash Latest</option>
-                  </optgroup>
-                  <optgroup label="קל - מהיר מאוד">
-                    <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash Lite</option>
-                    <option value="gemini-2.0-flash-lite">Gemini 2.0 Flash Lite</option>
-                    <option value="gemini-flash-lite-latest">Gemini Flash Lite Latest</option>
-                  </optgroup>
-                  <optgroup label="Pro - מדויק יותר (יקר)">
-                    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-                    <option value="gemini-pro-latest">Gemini Pro Latest</option>
-                  </optgroup>
+                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (מומלץ)</option>
+                  <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
                 </select>
                 <p className="text-xs text-gray-500 mt-2">
                   נבחר: <span className="font-mono">{selectedModel}</span>
@@ -1627,11 +1615,6 @@ export default function EditPage() {
                   >
                     איפוס לברירת מחדל
                   </button>
-                </div>
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 mb-3">
-                  <p className="text-xs text-yellow-800">
-                    <span className="font-bold">🔒 הגנה:</span> יש פרומפט מערכת קבוע שמבטיח שהמודל יבצע רק OCR. הפרומפט שלך משני לו ולא יכול לעקוף אותו.
-                  </p>
                 </div>
                 <p className="text-xs text-gray-600 mb-3">
                   ערוך את ההנחיות ל-Gemini AI. הפרומפט באנגלית עובד טוב יותר.
@@ -1657,9 +1640,8 @@ export default function EditPage() {
                 <ul className="text-xs text-blue-800 space-y-1">
                   <li>• המפתח נשמר בדפדפן שלך בלבד (localStorage)</li>
                   <li>• המפתח לא נשלח לשרת - רק ישירות ל-Google</li>
-                  <li>• Flash - מהיר וזול, מומלץ לרוב המקרים</li>
-                  <li>• Lite - מהיר מאוד, טוב לטקסט פשוט</li>
-                  <li>• Pro - מדויק יותר אבל יקר ואיטי יותר</li>
+                  <li>• 2.5 Flash - מהיר וזול, מומלץ לרוב המקרים</li>
+                  <li>• 2.5 Pro - מדויק יותר אבל יקר ואיטי יותר</li>
                   <li>• פרומפט באנגלית מייצר תוצאות טובות יותר</li>
                   <li>• ציין בפרומפט את סוג הטקסט (רש"י, מרובע, וכו')</li>
                 </ul>
