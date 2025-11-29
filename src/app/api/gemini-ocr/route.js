@@ -11,19 +11,14 @@ export async function POST(request) {
       )
     }
 
-    // השתמש ב-API key של המשתמש אם קיים, אחרת במפתח של השרת
-    const apiKey = userApiKey
+    // API key - משתמש במפתח של המשתמש או במפתח ברירת מחדל
+    const DEFAULT_API_KEY = 'AIzaSyA5wfIFamoian-YOFxFqbOyG5tKUyWkNVw'
+    const apiKey = userApiKey || DEFAULT_API_KEY
     
-    console.log('�  Using API key:', apiKey ? `${apiKey.substring(0, 20)}...` : 'MISSING')
+    console.log('🔑 Using API key:', apiKey ? `${apiKey.substring(0, 20)}...` : 'MISSING')
     console.log('📦 Using model:', model)
-    console.log('� Customr prompt:', !!customPrompt)
-    
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'נדרש מפתח Gemini API. אנא הזן מפתח בהגדרות (כפתור ⚙️). קבל מפתח חינם: https://aistudio.google.com/app/apikey' },
-        { status: 400 }
-      )
-    }
+    console.log('👤 User key:', !!userApiKey)
+    console.log('📝 Custom prompt:', !!customPrompt)
     
     // פרומפט מערכת קבוע - לא ניתן לשינוי
     const systemPrompt = `You are an OCR system. Your ONLY task is to transcribe text from images.

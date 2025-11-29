@@ -42,7 +42,7 @@ export default function EditPage() {
   const [ocrMethod, setOcrMethod] = useState('tesseract') // 'tesseract' או 'gemini'
   const [showSettings, setShowSettings] = useState(false) // הצגת sidebar הגדרות
   const [userApiKey, setUserApiKey] = useState('') // API key של המשתמש
-  const [selectedModel, setSelectedModel] = useState('gemini-2.5-flash') // מודל נבחר
+  const [selectedModel, setSelectedModel] = useState('gemini-3-pro-preview') // מודל נבחר
   const [customPrompt, setCustomPrompt] = useState('The text is in Hebrew, written in Rashi script (traditional Hebrew font).\n\nTranscription guidelines:\n- Transcribe exactly what you see, letter by letter\n- Do NOT add nikud (vowel points) unless they appear in the image\n- Do NOT correct or "fix" words to make them more meaningful\n- Preserve the exact spelling, even if words seem unusual or abbreviated\n- In Rashi script: Final Mem (ם) looks like Samekh (ס), and Alef (א) looks like Het (ח) - be careful\n- Preserve all line breaks and spacing\n- Return only the Hebrew text without explanations')
 
   // טען הגדרות מ-localStorage
@@ -1548,10 +1548,10 @@ export default function EditPage() {
               <div>
                 <label className="block text-sm font-bold text-gray-900 mb-2 flex items-center gap-1">
                   Gemini API Key
-                  <span className="text-red-500">*</span>
+                  <span className="text-gray-400 text-xs font-normal">(אופציונלי)</span>
                 </label>
                 <p className="text-xs text-gray-600 mb-3">
-                  נדרש מפתח אישי לשימוש ב-Gemini OCR. 
+                  יש מפתח ברירת מחדל. אם תרצה להשתמש במפתח שלך, 
                   <a 
                     href="https://aistudio.google.com/app/apikey" 
                     target="_blank" 
@@ -1565,19 +1565,18 @@ export default function EditPage() {
                   type="password"
                   value={userApiKey}
                   onChange={(e) => setUserApiKey(e.target.value)}
-                  placeholder="AIzaSy..."
+                  placeholder="השאר ריק לשימוש במפתח ברירת מחדל"
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm font-mono"
-                  required
                 />
                 {userApiKey ? (
                   <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
                     <span className="material-symbols-outlined text-sm">check_circle</span>
-                    מפתח הוזן
+                    משתמש במפתח שלך
                   </p>
                 ) : (
-                  <p className="text-xs text-red-600 mt-2 flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">error</span>
-                    חובה להזין מפתח לשימוש ב-Gemini
+                  <p className="text-xs text-blue-600 mt-2 flex items-center gap-1">
+                    <span className="material-symbols-outlined text-sm">info</span>
+                    משתמש במפתח ברירת מחדל
                   </p>
                 )}
               </div>
@@ -1588,14 +1587,15 @@ export default function EditPage() {
                   בחירת מודל
                 </label>
                 <p className="text-xs text-gray-600 mb-3">
-                  Flash - מהיר וזול | Pro - מדויק יותר אבל יקר ואיטי
+                  Flash - מהיר וזול | Pro - מדויק יותר | 3 Pro - החדש ביותר (ברירת מחדל)
                 </p>
                 <select
                   value={selectedModel}
                   onChange={(e) => setSelectedModel(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 >
-                  <option value="gemini-2.5-flash">Gemini 2.5 Flash (מומלץ)</option>
+                  <option value="gemini-3-pro-preview">Gemini 3 Pro (ברירת מחדל)</option>
+                  <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
                   <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
                 </select>
                 <p className="text-xs text-gray-500 mt-2">
@@ -1638,10 +1638,10 @@ export default function EditPage() {
                   טיפים
                 </h3>
                 <ul className="text-xs text-blue-800 space-y-1">
-                  <li>• המפתח נשמר בדפדפן שלך בלבד (localStorage)</li>
-                  <li>• המפתח לא נשלח לשרת - רק ישירות ל-Google</li>
-                  <li>• 2.5 Flash - מהיר וזול, מומלץ לרוב המקרים</li>
-                  <li>• 2.5 Pro - מדויק יותר אבל יקר ואיטי יותר</li>
+                  <li>• יש מפתח ברירת מחדל - אין צורך להזין מפתח משלך</li>
+                  <li>• אם תזין מפתח משלך, הוא נשמר בדפדפן בלבד</li>
+                  <li>• Gemini 3 Pro - החדש ביותר (ברירת מחדל)</li>
+                  <li>• 2.5 Flash - מהיר וזול | 2.5 Pro - מדויק יותר</li>
                   <li>• פרומפט באנגלית מייצר תוצאות טובות יותר</li>
                   <li>• ציין בפרומפט את סוג הטקסט (רש"י, מרובע, וכו')</li>
                 </ul>
