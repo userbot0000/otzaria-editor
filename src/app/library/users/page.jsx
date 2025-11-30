@@ -11,6 +11,8 @@ export default function UsersPage() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [sortBy, setSortBy] = useState('points') // points, name, date
+  const [currentPage, setCurrentPage] = useState(1)
+  const usersPerPage = 40
 
   useEffect(() => {
     loadUsers()
@@ -44,6 +46,16 @@ export default function UsersPage() {
         return 0
     }
   })
+
+  // Pagination
+  const totalPages = Math.ceil(sortedUsers.length / usersPerPage)
+  const startIndex = (currentPage - 1) * usersPerPage
+  const paginatedUsers = sortedUsers.slice(startIndex, startIndex + usersPerPage)
+
+  // Reset to page 1 when sort changes
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [sortBy])
 
   const formatJoinDate = (dateString) => {
     const date = new Date(dateString)
@@ -123,46 +135,100 @@ export default function UsersPage() {
                 </span>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-                {sortedUsers.map((user) => {
-                  return (
-                    <div
-                      key={user.id}
-                      className="glass p-3 rounded-lg hover:shadow-md transition-all"
-                    >
-                      <div className="flex items-center gap-3">
-                        {/* Avatar */}
-                        <div 
-                          className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0 shadow-md"
-                          style={{ backgroundColor: getAvatarColor(user.name) }}
-                        >
-                          {getInitial(user.name)}
-                        </div>
-
-                        {/* User Info */}
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-sm text-on-surface truncate">
-                            {user.name}
-                          </h3>
-                          <p className="text-xs text-on-surface/60">
-                            {formatJoinDate(user.createdAt)}
-                          </p>
-                        </div>
-
-                        {/* Points */}
-                        <div className="text-left flex-shrink-0">
-                          <div className="text-primary font-bold text-base">
-                            {user.points.toLocaleString()}
+              <>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+                  {paginatedUsers.map((user) => {
+                    return (
+                      <div
+                        key={user.id}
+                        className="glass p-3 rounded-lg hover:shadow-md transition-all"
+                      >
+                        <div className="flex items-center gap-3">
+                          {/* Avatar */}
+                          <div 
+                            className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0 shadow-md"
+                            style={{ backgroundColor: getAvatarColor(user.name) }}
+                          >
+                            {getInitial(user.name)}
                           </div>
-                          <p className="text-xs text-on-surface/60">נקודות</p>
+
+                          {/* User Info */}
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-sm text-on-surface truncate">
+                              {user.name}
+                            </h3>
+                            <p className="text-xs text-on-surface/60">
+                              {formatJoinDate(user.createdAt)}
+                            </p>
+                          </div>
+
+                          {/* Points */}
+                          <div className="text-left flex-shrink-0">
+                            <div className="text-primary font-bold text-base">
+                              {user.points.toLocaleString()}
+                            </div>
+                            <p className="text-xs text-on-surface/60">נקודות</p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+                    )
+                  })}
+                </div>
 
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center gap-2 mt-8">
+                    <button
+                      onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                      disabled={currentPage === 1}
+                      className="p-2 rounded-lg bg-surface hover:bg-surface-variant disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <span className="material-symbols-outlined">chevron_right</span>
+                    </button>
+
+                    {/* Page Numbers */}
+                    <div className="flex gap-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(page => {
+                          // Show first, last, current, and neighbors
+                          if (page === 1 || page === totalPages) return true
+                          if (Math.abs(page - currentPage) <= 1) return true
+                          return false
+                        })
+                        .map((page, idx, arr) => {
+                          // Add ellipsis
+                          const showEllipsisBefore = idx > 0 && page - arr[idx - 1] > 1
+                          return (
+                            <div key={page} className="flex items-center gap-1">
+                              {showEllipsisBefore && (
+                                <span className="px-2 text-on-surface/50">...</span>
+                              )}
+                              <button
+                                onClick={() => setCurrentPage(page)}
+                                className={`min-w-[36px] h-9 rounded-lg text-sm font-medium transition-colors ${
+                                  currentPage === page
+                                    ? 'bg-primary text-on-primary'
+                                    : 'bg-surface hover:bg-surface-variant text-on-surface'
+                                }`}
+                              >
+                                {page}
+                              </button>
+                            </div>
+                          )
+                        })}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages}
+                      className="p-2 rounded-lg bg-surface hover:bg-surface-variant disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <span className="material-symbols-outlined">chevron_left</span>
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
 
           </div>
         </div>
