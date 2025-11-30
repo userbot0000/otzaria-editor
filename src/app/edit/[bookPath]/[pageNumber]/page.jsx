@@ -522,11 +522,13 @@ export default function EditPage() {
 
       // הוסף את הטקסט לעורך
       if (twoColumns) {
-        setRightColumn(prev => prev + (prev ? '\n' : '') + extractedText)
-        debouncedSave(content, leftColumn, rightColumn + '\n' + extractedText, twoColumns)
+        const newRightColumn = rightColumn + (rightColumn ? '\n\n' : '') + extractedText
+        setRightColumn(newRightColumn)
+        debouncedSave(content, leftColumn, newRightColumn, twoColumns)
       } else {
-        setContent(prev => prev + (prev ? '\n' : '') + extractedText)
-        debouncedSave(content + '\n' + extractedText, leftColumn, rightColumn, twoColumns)
+        const newContent = content + (content ? '\n\n' : '') + extractedText
+        setContent(newContent)
+        debouncedSave(newContent, leftColumn, rightColumn, twoColumns)
       }
 
       alert(`✅ OCR הושלם בהצלחה!\nזוהו ${extractedText.length} תווים`)
@@ -612,15 +614,17 @@ export default function EditPage() {
         return
       }
 
-      // העתק את הטקסט לפאנל העריכה
+      // הוסף את הטקסט לפאנל העריכה
       if (twoColumns) {
-        // אם יש שני טורים, שים בטור הימני
-        setRightColumn(extractedText)
-        debouncedSave(content, leftColumn, extractedText, twoColumns)
+        // אם יש שני טורים, הוסף לטור הימני
+        const newRightColumn = rightColumn + (rightColumn ? '\n\n' : '') + extractedText
+        setRightColumn(newRightColumn)
+        debouncedSave(content, leftColumn, newRightColumn, twoColumns)
       } else {
-        // אם יש טור אחד
-        setContent(extractedText)
-        debouncedSave(extractedText, leftColumn, rightColumn, twoColumns)
+        // אם יש טור אחד, הוסף לטקסט הקיים
+        const newContent = content + (content ? '\n\n' : '') + extractedText
+        setContent(newContent)
+        debouncedSave(newContent, leftColumn, rightColumn, twoColumns)
       }
 
       alert(`✅ ${methodName} הושלם בהצלחה!\nזוהו ${extractedText.length} תווים`)
