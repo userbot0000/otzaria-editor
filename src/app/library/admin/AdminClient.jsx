@@ -6,6 +6,7 @@ import Image from 'next/image'
 import Header from '@/components/Header'
 import Footer from '@/components/Footer'
 import AddBookDialog from '@/components/AddBookDialog'
+import EditBookInfoDialog from '@/components/EditBookInfoDialog'
 
 export default function AdminClient({ session }) {
     const [users, setUsers] = useState([])
@@ -29,6 +30,7 @@ export default function AdminClient({ session }) {
     const [newMessageSubject, setNewMessageSubject] = useState('')
     const [newMessageText, setNewMessageText] = useState('')
     const [sendingNewMessage, setSendingNewMessage] = useState(false)
+    const [editingBookInfo, setEditingBookInfo] = useState(null)
 
     useEffect(() => {
         loadData()
@@ -772,6 +774,12 @@ export default function AdminClient({ session }) {
                                                                 צפה
                                                             </Link>
                                                             <button
+                                                                onClick={() => setEditingBookInfo(book)}
+                                                                className="text-sm text-blue-600 hover:text-blue-800"
+                                                            >
+                                                                הוסף מידע
+                                                            </button>
+                                                            <button
                                                                 onClick={() => handleDeleteBook(book.path)}
                                                                 className="text-sm text-red-600 hover:text-red-800"
                                                             >
@@ -1293,6 +1301,15 @@ export default function AdminClient({ session }) {
                 onClose={() => setShowAddBook(false)}
                 onBookAdded={() => loadData()}
             />
+
+            {/* Edit Book Info Dialog */}
+            {editingBookInfo && (
+                <EditBookInfoDialog
+                    book={editingBookInfo}
+                    onClose={() => setEditingBookInfo(null)}
+                    onSave={() => loadData()}
+                />
+            )}
 
             {/* Send Message Dialog */}
             {showSendMessageDialog && (

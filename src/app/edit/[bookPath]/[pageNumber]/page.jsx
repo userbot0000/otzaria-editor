@@ -48,6 +48,7 @@ export default function EditPage() {
   const [customPrompt, setCustomPrompt] = useState('The text is in Hebrew, written in Rashi script (traditional Hebrew font).\n\nTranscription guidelines:\n- Transcribe exactly what you see, letter by letter\n- Do NOT add nikud (vowel points) unless they appear in the image\n- Do NOT correct or "fix" words to make them more meaningful\n- Preserve the exact spelling, even if words seem unusual or abbreviated\n- In Rashi script: Final Mem (ם) looks like Samekh (ס), and Alef (א) looks like Het (ח) - be careful\n- Preserve all line breaks and spacing\n- Return only the Hebrew text without explanations')
   const [imagePanelWidth, setImagePanelWidth] = useState(50) // אחוז רוחב של פאנל התמונה
   const [isResizing, setIsResizing] = useState(false)
+  const [showInfoDialog, setShowInfoDialog] = useState(false)
 
   // טען הגדרות מ-localStorage
   useEffect(() => {
@@ -525,6 +526,141 @@ export default function EditPage() {
   const resetPrompt = () => {
     const defaultPrompt = 'The text is in Hebrew, written in Rashi script (traditional Hebrew font).\n\nTranscription guidelines:\n- Transcribe exactly what you see, letter by letter\n- Do NOT add nikud (vowel points) unless they appear in the image\n- Do NOT correct or "fix" words to make them more meaningful\n- Preserve the exact spelling, even if words seem unusual or abbreviated\n- In Rashi script: Final Mem (ם) looks like Samekh (ס), and Alef (א) looks like Het (ח) - be careful\n- Preserve all line breaks and spacing\n- Return only the Hebrew text without explanations'
     setCustomPrompt(defaultPrompt)
+  }
+
+  // קבל הנחיות עריכה מהספר או ברירת מחדל
+  const getEditingInstructions = () => {
+    // אם יש מידע עריכה שמור בספר, השתמש בו
+    if (bookData?.editingInfo) {
+      return bookData.editingInfo
+    }
+
+    // אחרת, השתמש בהנחיות ברירת מחדל
+    const bookName = bookData?.name || ''
+
+    // הנחיות ברירת מחדל
+    const defaultInstructions = {
+      title: 'הנחיות עריכה כלליות',
+      sections: [
+        {
+          title: 'כללי',
+          items: [
+            'העתק את הטקסט בדיוק כפי שהוא מופיע בתמונה',
+            'שמור על מבנה הפסקאות והשורות',
+            'השתמש בכלי OCR לזיהוי אוטומטי של הטקסט'
+          ]
+        },
+        {
+          title: 'תיוג',
+          items: [
+            'השתמש בתגי <b> למילים מודגשות',
+            'השתמש בתגי <h1>, <h2>, <h3> לכותרות',
+            'השתמש בתגי <small> להערות שוליים'
+          ]
+        },
+        {
+          title: 'שמירה',
+          items: [
+            'הטקסט נשמר אוטומטית בזמן הקלדה',
+            'אין צורך ללחוץ על כפתור שמירה',
+            'השינויים נשמרים לצמיתות במסד הנתונים'
+          ]
+        }
+      ]
+    }
+
+    // הנחיות ספציפיות לספרים
+    if (bookName.includes('תלמוד') || bookName.includes('גמרא')) {
+      return {
+        title: 'הנחיות עריכה - תלמוד',
+        sections: [
+          {
+            title: 'מבנה הדף',
+            items: [
+              'פצל את הדף לשני טורים: גמרא (ימין) ורש"י/תוספות (שמאל)',
+              'השתמש בכפתור "שני טורים" לפיצול',
+              'שם את הטורים בהתאם: "גמרא", "רש״י", "תוספות"'
+            ]
+          },
+          {
+            title: 'כתב רש"י',
+            items: [
+              'שים לב להבדלים בין אותיות דומות',
+              'מ״ם סופית (ם) דומה לסמ״ך (ס)',
+              'אל״ף (א) דומה לח״ית (ח)',
+              'השתמש ב-Gemini OCR לדיוק טוב יותר'
+            ]
+          },
+          {
+            title: 'תיוג מיוחד',
+            items: [
+              'סמן שמות התנאים והאמוראים ב-<b>',
+              'סמן כותרות סוגיות ב-<h2>',
+              'הערות והגהות ב-<small>'
+            ]
+          }
+        ]
+      }
+    }
+
+    if (bookName.includes('משנה')) {
+      return {
+        title: 'הנחיות עריכה - משנה',
+        sections: [
+          {
+            title: 'מבנה',
+            items: [
+              'כל משנה בפסקה נפרדת',
+              'סמן מספרי משניות ב-<b>',
+              'שמור על חלוקה למשניות'
+            ]
+          },
+          {
+            title: 'תיוג',
+            items: [
+              'שמות התנאים ב-<b>',
+              'כותרות פרקים ב-<h2>',
+              'פירושים והערות ב-<small>'
+            ]
+          }
+        ]
+      }
+    }
+
+    if (bookName.includes('תנ"ך') || bookName.includes('תורה') || bookName.includes('נביאים') || bookName.includes('כתובים')) {
+      return {
+        title: 'הנחיות עריכה - תנ"ך',
+        sections: [
+          {
+            title: 'מבנה',
+            items: [
+              'כל פסוק בשורה נפרדת',
+              'סמן מספרי פסוקים ב-<small>',
+              'שמור על חלוקה לפרקים'
+            ]
+          },
+          {
+            title: 'ניקוד וטעמים',
+            items: [
+              'העתק את הניקוד והטעמים בדיוק',
+              'שים לב למילים עם דגש',
+              'שמור על מבנה הפסוקים'
+            ]
+          },
+          {
+            title: 'תיוג',
+            items: [
+              'כותרות פרקים ב-<h2>',
+              'שמות פרשיות ב-<h1>',
+              'הערות ופירושים ב-<small>'
+            ]
+          }
+        ]
+      }
+    }
+
+    // החזר הנחיות ברירת מחדל
+    return defaultInstructions
   }
 
   // Resize handler
@@ -1233,6 +1369,16 @@ export default function EditPage() {
                     {twoColumns ? 'view_column' : 'view_agenda'}
                   </span>
                 </button>
+
+                <div className="w-px h-6 bg-gray-200"></div>
+
+                <button
+                  onClick={() => setShowInfoDialog(true)}
+                  className="w-8 h-8 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors flex items-center justify-center"
+                  title="הנחיות עריכה"
+                >
+                  <span className="material-symbols-outlined text-base">info</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1742,6 +1888,65 @@ export default function EditPage() {
             </div>
           </div>
         )}
+
+        {/* Info Dialog */}
+        {showInfoDialog && (() => {
+          const instructions = getEditingInstructions()
+          return (
+            <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setShowInfoDialog(false)}>
+              <div className="glass-strong rounded-2xl p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-on-surface flex items-center gap-2">
+                    <span className="material-symbols-outlined text-blue-600 text-3xl">info</span>
+                    <span>{instructions.title}</span>
+                  </h2>
+                  <button
+                    onClick={() => setShowInfoDialog(false)}
+                    className="text-on-surface/50 hover:text-on-surface transition-colors"
+                  >
+                    <span className="material-symbols-outlined text-3xl">close</span>
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  {instructions.sections.map((section, idx) => (
+                    <div key={idx} className="bg-surface/30 rounded-xl p-4">
+                      <h3 className="text-lg font-bold text-on-surface mb-3 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-primary">check_circle</span>
+                        {section.title}
+                      </h3>
+                      <ul className="space-y-2">
+                        {section.items.map((item, itemIdx) => (
+                          <li key={itemIdx} className="flex items-start gap-2 text-on-surface/80">
+                            <span className="material-symbols-outlined text-sm text-primary mt-0.5">arrow_left</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="mt-6 bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+                  <div className="flex items-start gap-2 text-sm text-blue-800">
+                    <span className="material-symbols-outlined text-blue-600 text-lg">lightbulb</span>
+                    <div>
+                      <p className="font-bold mb-1">טיפ:</p>
+                      <p>השתמש בכלי OCR (Tesseract או Gemini) לזיהוי אוטומטי של הטקסט. ניתן לבחור אזור ספציפי בתמונה לזיהוי מדויק יותר.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowInfoDialog(false)}
+                  className="w-full mt-6 px-4 py-3 bg-primary text-on-primary rounded-lg hover:bg-accent transition-colors font-bold"
+                >
+                  הבנתי, בואו נתחיל!
+                </button>
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Settings Sidebar */}
         {showSettings && (
